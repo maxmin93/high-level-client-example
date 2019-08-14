@@ -1,0 +1,17 @@
+{
+  "properties":{
+    "id" :         { "type" : "keyword" },
+    "first_name" : { "type" : "text", "fields":{ "keyword": {"type":"keyword", "ignore_above": 256} } },
+    "last_name"  : { "type" : "text", "fields":{ "keyword": {"type":"keyword", "ignore_above": 256} } },
+    "gender" :     { "type" : "keyword" },
+    "age" :        { "type" : "integer" },
+    "emails" :     { "type" : "keyword" },
+    "technologies" : {
+      "type" : "nested",
+      "properties": {
+        "name":                { "type": "keyword" },
+        "years_of_experience": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -30,7 +30,7 @@ public class ProfileController {
     ///////////////////////////////////////////////////////////////
 
     /*
-        curl -X GET "localhost:8080/index"
+curl -X GET "localhost:8080/index"
     */
     @GetMapping("/index")
     public ResponseEntity checkExistsIndex() throws Exception {
@@ -47,30 +47,33 @@ public class ProfileController {
         return new ResponseEntity(service.removeIndex(), HttpStatus.OK);
     }
 
+    @PutMapping("/index")
+    public ResponseEntity resetIndex() throws Exception {
+        return new ResponseEntity(service.resetIndex(), HttpStatus.OK);
+    }
+
     ///////////////////////////////////////////////////////////////
 
     /*
-        curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_01", "first_name":"world1", "last_name": "hello", "gender":"male", "age":23, "emails": ["world1.hello@mail.com"], "technologies": [ {"name":"java", "years_of_experience":5},{"name":"typescript", "yearsOfExperience":3}] }' localhost:8080/doc
-        curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_02", "first_name":"world2", "last_name": "hello", "emails": ["world2.hello@mail.com"], "technologies": [ {"name":"ruby", "years_of_experience":6},{"name":"jruvy", "yearsOfExperience":1}] }' localhost:8080/doc
-        curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_03", "first_name":"world3", "last_name": "fake", "emails": ["world3.fake@junk.com"], "technologies": [ {"name":"samba", "years_of_experience":4},{"name":"hotdog", "yearsOfExperience":2}] }' localhost:8080/doc
+curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_01", "first_name":"world1", "last_name": "hello", "gender":"male", "age":23, "emails": ["world1.hello@mail.com"], "technologies": [ {"name":"java", "years_of_experience":5},{"name":"typescript", "years_of_experience":3}] }' localhost:8080/doc
+curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_02", "first_name":"world2", "last_name": "hello", "gender":"female", "age":32, "emails": ["world2.hello@mail.com"], "technologies": [ {"name":"ruby", "years_of_experience":6},{"name":"jruvy", "years_of_experience":1}] }' localhost:8080/doc
+curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_03", "first_name":"world3", "last_name": "fake", "gender":"male", "age":47, "emails": ["world3.fake@junk.com"], "technologies": [ {"name":"samba", "years_of_experience":4},{"name":"hotdog", "years_of_experience":2}] }' localhost:8080/doc
     */
     @PostMapping("/doc")
     public ResponseEntity createProfile(@RequestBody ProfileDocument document) throws Exception {
-        System.out.println("POST => "+document.toString());
         return new ResponseEntity(service.createProfileDocument(document), HttpStatus.CREATED);
     }
 
     /*
-        curl -X PUT -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_02", "firstName":"world2", "lastName": "hello", "emails": ["world2.hello@mail.com", "world2.new@another.com"], "technologies": [ {"name":"javascript", "yearsOfExperience":2}, {"name":"ruby", "yearsOfExperience":3},{"name":"jruvy", "yearsOfExperience":1}] }' localhost:8080/doc
+curl -X PUT -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"profile_02", "first_name":"world2", "last_name": "hello", "gender":"female", "age":31, "emails": ["world2.hello@mail.com", "world2.new@another.com"], "technologies": [ {"name":"javascript", "years_of_experience":2}, {"name":"ruby", "years_of_experience":3},{"name":"jruby", "years_of_experience":1}] }' localhost:8080/doc
     */
     @PutMapping("/doc")
     public ResponseEntity updateProfile(@RequestBody ProfileDocument document) throws Exception {
-
         return new ResponseEntity(service.updateProfileDocument(document), HttpStatus.CREATED);
     }
 
     /*
-        curl -X DELETE "localhost:8080/doc/profile_03"
+curl -X DELETE "localhost:8080/doc/profile_03"
     */
     @DeleteMapping("/doc/{id}")
     public String deleteProfileDocument(@PathVariable String id) throws Exception {
@@ -81,7 +84,7 @@ public class ProfileController {
     ///////////////////////////////////////////////////////////////
 
     /*
-        curl -X GET "localhost:8080/doc"
+curl -X GET "localhost:8080/doc"
     */
     @GetMapping("/doc")
     public List<ProfileDocument> findAll() throws Exception {
@@ -90,7 +93,7 @@ public class ProfileController {
     }
 
     /*
-        curl -X GET "localhost:8080/doc/profile_02"
+curl -X GET "localhost:8080/doc/profile_02"
     */
     @GetMapping("/doc/{id}")
     public ProfileDocument findById(@PathVariable String id) throws Exception {
@@ -101,7 +104,7 @@ public class ProfileController {
     ///////////////////////////////////////////////////////////////
 
     /*
-        curl -X GET "localhost:8080/doc/search/technology?q=java"
+curl -X GET "localhost:8080/doc/search/technology?q=java"
     */
     @GetMapping(value = "/doc/search/technology")
     public List<ProfileDocument> searchByTechnology(
@@ -112,7 +115,7 @@ public class ProfileController {
     }
 
     /*
-        curl -X GET "localhost:8080/doc/search/name?q=hello"
+curl -X GET "localhost:8080/doc/search/name?q=hello"
     */
     @GetMapping(value = "/doc/search/name")
     public List<ProfileDocument> searchByName(

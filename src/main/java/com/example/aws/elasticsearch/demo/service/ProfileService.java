@@ -28,16 +28,24 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.aws.elasticsearch.demo.util.Constant.INDEX;
-import static com.example.aws.elasticsearch.demo.util.Constant.TYPE;
+// import static com.example.aws.elasticsearch.demo.util.Constant.TYPE;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Service
 @Slf4j
 public class ProfileService {
+
+    static String mappings_file = "classpath:mappings/profile-document.json";
 
     private RestHighLevelClient client;
     private ObjectMapper objectMapper;
@@ -54,6 +62,21 @@ public class ProfileService {
     // 참고 : Java High Level REST Client
     // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high.html
 
+    // 참고 : mappings - types
+    // https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html
+    // simple type : text, keyword, date, long, double, boolean, ip
+    // JSON type : object, nested
+
+    @PostConstruct
+    private void ready() throws Exception {
+        // if not exists index, create index
+        if( !checkExistsIndex() ) createIndex();
+    }
+
+    // ** check url:
+    //      mappings => http://27.117.163.21:15619/lead/_mappings
+    //      first doc => http://27.117.163.21:15619/lead/_doc/profile_01
+
     ///////////////////////////////////////////////////////////////
 
     // check if exists index
@@ -62,10 +85,13 @@ public class ProfileService {
         return client.indices().exists(request, RequestOptions.DEFAULT);
     }
 
-    public boolean createIndex() throws Exception {
+    private String readMappings() throws Exception {
+        File file = ResourceUtils.getFile(mappings_file);
+        if( !file.exists() ) throw new FileNotFoundException("mappings-file not found => "+mappings_file);
+        return new String(Files.readAllBytes(file.toPath()));
+    }
 
-        // check if exists index
-        if( checkExistsIndex() ) return true;
+    public boolean createIndex() throws Exception {
 
         CreateIndexRequest request = new CreateIndexRequest(INDEX);
 
@@ -73,68 +99,29 @@ public class ProfileService {
         request.settings(Settings.builder()
                 .put("index.number_of_shards", 2)
                 .put("index.number_of_replicas", 0)
-                .put("index.refresh_interval", -1)
         );
-
         // mappings
-        //
-        // https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html
-        // simple type : text, keyword, date, long, double, boolean, ip
-        // JSON type : object, nested
-        request.mapping("{\n"
-                +"  \"properties\": {\n"
-                +"    \"first_name\"  : { \"type\": \"text\"    },\n"
-                +"    \"last_name\"   : { \"type\": \"text\"    },\n"
-                +"    \"gender\"      : { \"type\": \"keyword\" },\n"
-                +"    \"age\"         : { \"type\": \"integer\" },\n"
-                +"    \"emails\"      : { \"type\": \"keyword\" },\n"
-                +"    \"technologies\": {\n"
-                +"      \"type\": \"nested\",\n"
-                +"      \"properties\": {\n"
-                +"        \"name\"                : { \"type\": \"keyword\" },\n"
-                +"        \"years_of_experience\" : { \"type\": \"integer\" }\n"
-                +"      }\n"
-                +"    }\n"
-                +"  }\n"
-                +"}\n", XContentType.JSON);
+        request.mapping(readMappings(), XContentType.JSON);
 
-/*
-{
-  "properties":{
-    "first_name" : { "type" : "text" },
-    "last_name" : { "type" : "text" },
-    "gender" : { "type" : "keyword" },
-    "age" : { "type" : "integer" },
-    "emails" : { "type" : "keyword" },
-    "technologies" : {
-      "type" : "nested",
-      "properties": {
-        "keyword": { "type": "keyword" },
-        "years_of_experience": { "type": "integer" }
-      }
-    }
-  }
-}
- */
         AcknowledgedResponse indexResponse = client.indices().create(request, RequestOptions.DEFAULT);
         return indexResponse.isAcknowledged();
     }
 
     public boolean removeIndex() throws Exception {
-        // check if exists index
-        if( !checkExistsIndex() ) return true;
-
         DeleteIndexRequest request = new DeleteIndexRequest(INDEX);
         AcknowledgedResponse indexResponse = client.indices().delete(request, RequestOptions.DEFAULT);
         return indexResponse.isAcknowledged();
     }
 
+    public boolean resetIndex() throws Exception {
+        // check if exists index
+        if( checkExistsIndex() ) removeIndex();
+        return createIndex();
+    }
+
     ///////////////////////////////////////////////////////////////
     
     public String createProfileDocument(ProfileDocument document) throws Exception {
-
-        // check if exists index
-        if( !checkExistsIndex() ) createIndex();
 
         // random document_id
         if( document.getId() == null ){
@@ -143,29 +130,32 @@ public class ProfileService {
         }
 
         IndexRequest indexRequest = new IndexRequest(INDEX)
+                .id(document.getId())
                 .source(convertProfileDocumentToMap(document));
 
         IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         return indexResponse.getResult().name();
     }
 
+    // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-update.html
     public String updateProfileDocument(ProfileDocument document) throws Exception {
 
         ProfileDocument resultDocument = findById(document.getId());
 
-        UpdateRequest updateRequest = new UpdateRequest(INDEX, resultDocument.getId());
+        UpdateRequest updateRequest = new UpdateRequest().index(INDEX)
+                .id(resultDocument.getId())
+                .doc(convertProfileDocumentToMap(document));
 
-        updateRequest.doc(convertProfileDocumentToMap(document));
         UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-
         return updateResponse.getResult().name();
     }
 
     public String deleteProfileDocument(String id) throws Exception {
 
-        DeleteRequest deleteRequest = new DeleteRequest(INDEX);
-        DeleteResponse response = client.delete(deleteRequest,RequestOptions.DEFAULT);
+        DeleteRequest deleteRequest = new DeleteRequest(INDEX)
+                .id(id);
 
+        DeleteResponse response = client.delete(deleteRequest, RequestOptions.DEFAULT);
         return response.getResult().name();
     }
 
@@ -186,36 +176,21 @@ public class ProfileService {
 
     public ProfileDocument findById(String id) throws Exception {
 
-        GetRequest getRequest = new GetRequest(INDEX);  //, TYPE, id);
+        GetRequest getRequest = new GetRequest(INDEX)
+                .id(id);
 
         GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
         Map<String, Object> resultMap = getResponse.getSource();
-
         return convertMapToProfileDocument(resultMap);
     }
 
-    public List<ProfileDocument> findProfileByName(String name) throws Exception{
-
-        SearchRequest searchRequest = new SearchRequest(INDEX);
-//        searchRequest.indices(INDEX);
-//        searchRequest.types(TYPE);
-
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-        MatchQueryBuilder matchQueryBuilder = QueryBuilders
-                .matchQuery("firstName",name)
-                .operator(Operator.AND);
-
-        searchSourceBuilder.query(matchQueryBuilder);
-
-        searchRequest.source(searchSourceBuilder);
-
-        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
-        return getSearchResult(searchResponse);
-    }
-
     ///////////////////////////////////////////////////////////////
+
+//    private Map<String, Object> skipIdField(Map<String, Object> inputMap) {
+//        return inputMap.entrySet().stream()
+//                .filter(e->!e.getKey().equals("id"))
+//                .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+//    }
 
     private Map<String, Object> convertProfileDocumentToMap(ProfileDocument profileDocument) {
         return objectMapper.convertValue(profileDocument, Map.class);
@@ -232,18 +207,20 @@ public class ProfileService {
         SearchRequest searchRequest = new SearchRequest(INDEX);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-        QueryBuilder queryBuilder = boolQuery()
-            .must(nestedQuery("technologies", boolQuery()
-                    .must(QueryBuilders.termQuery("technologies.name",technology))
-                , ScoreMode.Avg)
-            );
+        // define : nested query
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+            .must(QueryBuilders.nestedQuery("technologies",
+                    QueryBuilders.boolQuery().must(
+                        QueryBuilders.termQuery("technologies.name", technology)
+                    )
+            , ScoreMode.Avg) );
 
         // build
-        searchSourceBuilder.query(nestedQuery("technologies",queryBuilder,ScoreMode.Avg));
+        searchSourceBuilder.query(queryBuilder);
         // set to request
         searchRequest.source(searchSourceBuilder);
         // search
-        SearchResponse response = client.search(searchRequest,RequestOptions.DEFAULT);
+        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
         // response
         return getSearchResult(response);
     }
@@ -253,17 +230,17 @@ public class ProfileService {
         SearchRequest searchRequest = new SearchRequest(INDEX);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-        // define
-        BoolQueryBuilder filter = new BoolQueryBuilder()
-                .should(termQuery("firstName",name))
-                .should(termQuery("lastName",name));
+        // define : or match
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .should(termQuery("first_name", name))
+                .should(termQuery("last_name", name));
 
         // build
-        searchSourceBuilder.query(filter);
+        searchSourceBuilder.query(queryBuilder);
         // set to request
         searchRequest.source(searchSourceBuilder);
         // search
-        SearchResponse response = client.search(searchRequest,RequestOptions.DEFAULT);
+        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
         // response
         return getSearchResult(response);
     }
@@ -273,7 +250,6 @@ public class ProfileService {
         SearchHit[] searchHit = response.getHits().getHits();
 
         List<ProfileDocument> profileDocuments = new ArrayList<>();
-
         for (SearchHit hit : searchHit){
             profileDocuments.add(objectMapper.convertValue(
                     hit.getSourceAsMap(), ProfileDocument.class));
@@ -282,12 +258,4 @@ public class ProfileService {
         return profileDocuments;
     }
 
-//    private SearchRequest buildSearchRequest(String index, String type) {
-//
-//        SearchRequest searchRequest = new SearchRequest();
-//        searchRequest.indices(index);
-//        searchRequest.types(type);
-//
-//        return searchRequest;
-//    }
 }
