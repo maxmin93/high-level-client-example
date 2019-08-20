@@ -1,6 +1,6 @@
-package com.example.aws.elasticsearch.demo.service;
+package com.example.aws.elasticsearch.demo.profilesample;
 
-import com.example.aws.elasticsearch.demo.document.ProfileDocument;
+import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.join.ScoreMode;
@@ -35,10 +35,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static com.example.aws.elasticsearch.demo.util.Constant.INDEX;
-// import static com.example.aws.elasticsearch.demo.util.Constant.TYPE;
+import static com.example.aws.elasticsearch.demo.profilesample.Constant.INDEX;
+// import static com.example.aws.elasticsearch.demo.profilesample.Constant.TYPE;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Service

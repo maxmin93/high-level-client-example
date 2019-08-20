@@ -1,4 +1,4 @@
-package com.example.aws.elasticsearch.demo.model;
+package com.example.aws.elasticsearch.demo.profilesample.model;
 
 import lombok.Data;
 

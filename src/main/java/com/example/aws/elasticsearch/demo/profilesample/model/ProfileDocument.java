@@ -1,6 +1,5 @@
-package com.example.aws.elasticsearch.demo.document;
+package com.example.aws.elasticsearch.demo.profilesample.model;
 
-import com.example.aws.elasticsearch.demo.model.Technologies;
 import lombok.Data;
 
 import java.util.List;

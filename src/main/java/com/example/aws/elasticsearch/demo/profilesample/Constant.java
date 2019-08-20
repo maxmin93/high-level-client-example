@@ -1,4 +1,4 @@
-package com.example.aws.elasticsearch.demo.util;
+package com.example.aws.elasticsearch.demo.profilesample;
 
 public interface Constant {
     

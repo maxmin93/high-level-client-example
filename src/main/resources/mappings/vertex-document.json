@@ -1,0 +1,15 @@
+{
+  "properties":{
+    "id"         : { "type" : "keyword" },
+    "label"      : { "type" : "keyword" },
+    "datasource" : { "type" : "keyword" },
+    "properties" : {
+      "type" : "nested",
+      "properties": {
+        "key"   : { "type": "keyword" },
+        "type"  : { "type": "keyword" },
+        "value" : { "type" : "text", "fields":{ "keyword": {"type":"keyword", "ignore_above": 256} } }
+      }
+    }
+  }
+}

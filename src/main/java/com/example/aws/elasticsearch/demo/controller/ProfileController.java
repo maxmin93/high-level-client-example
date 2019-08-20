@@ -1,7 +1,7 @@
 package com.example.aws.elasticsearch.demo.controller;
 
-import com.example.aws.elasticsearch.demo.document.ProfileDocument;
-import com.example.aws.elasticsearch.demo.service.ProfileService;
+import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
+import com.example.aws.elasticsearch.demo.profilesample.ProfileService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
