@@ -1,6 +1,7 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 
 import static com.example.aws.elasticsearch.demo.profilesample.Constant.INDEX;
 
+@Slf4j
 public class ElasticGraphService {
 
     static final String MAPPINGS_VERTEX = "classpath:mappings/vertex-document.json";
@@ -30,20 +32,12 @@ public class ElasticGraphService {
     private RestHighLevelClient client;
     private ObjectMapper objectMapper;
 
-    @Autowired
     public ElasticGraphService(
             RestHighLevelClient client,     // elasticsearch config
             ObjectMapper objectMapper       // spring boot web starter
     ) {
         this.client = client;
         this.objectMapper = objectMapper;
-    }
-
-    @PostConstruct
-    private void ready() throws Exception {
-        // if not exists index, create index
-        if( !checkExistsIndex(INDEX_VERTEX) ) createIndex(INDEX_VERTEX);
-        if( !checkExistsIndex(INDEX_EDGE) ) createIndex(INDEX_EDGE);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -92,6 +86,12 @@ public class ElasticGraphService {
         result &= createIndex(INDEX_EDGE);
 
         return result;
+    }
+
+    public void ready() throws Exception {
+        // if not exists index, create index
+        if( !checkExistsIndex(INDEX_VERTEX) ) createIndex(INDEX_VERTEX);
+        if( !checkExistsIndex(INDEX_EDGE) ) createIndex(INDEX_EDGE);
     }
 
 }

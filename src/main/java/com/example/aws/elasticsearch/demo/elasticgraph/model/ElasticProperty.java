@@ -1,5 +1,6 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
 @Data
@@ -8,5 +9,19 @@ public class ElasticProperty {
     private String key;
     private String type;
     private String value;
+
+    public Object value(ObjectMapper mapper){
+        if( value == null ) return null;
+        Object translated = (Object)value;
+
+        try {
+            Class<?> clazz = Class.forName(type);
+            translated = mapper.convertValue(value, clazz);
+        }
+        catch (ClassNotFoundException ex){
+            return translated;
+        }
+        return translated;
+    }
 
 }

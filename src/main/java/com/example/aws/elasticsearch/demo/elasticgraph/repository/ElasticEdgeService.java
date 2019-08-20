@@ -6,14 +6,12 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
 @Slf4j
-public class ElasticEdgeService {
+public final class ElasticEdgeService {
 
     private RestHighLevelClient client;
     private ObjectMapper mapper;
 
-    @Autowired
     public ElasticEdgeService(
             RestHighLevelClient client,     // elasticsearch config
             ObjectMapper mapper             // spring boot web starter
