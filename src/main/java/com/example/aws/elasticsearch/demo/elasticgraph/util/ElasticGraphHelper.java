@@ -1,16 +1,14 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.util;
 
-import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdgeDocument;
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdge;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
-import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertexDocument;
-import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -22,18 +20,18 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 public final class ElasticGraphHelper {
 
-    public static Map<String, Object> convertVertexDocumentToMap(ObjectMapper mapper, ElasticVertexDocument vertexDocument) {
+    public static Map<String, Object> convertVertexDocumentToMap(ObjectMapper mapper, ElasticVertex vertexDocument) {
         return mapper.convertValue(vertexDocument, Map.class);
     }
-    public static Map<String, Object> convertEdgeDocumentToMap(ObjectMapper mapper, ElasticEdgeDocument edgeDocument) {
+    public static Map<String, Object> convertEdgeDocumentToMap(ObjectMapper mapper, ElasticEdge edgeDocument) {
         return mapper.convertValue(edgeDocument, Map.class);
     }
 
-    public static ElasticEdgeDocument convertMapToEdgeDocument(ObjectMapper mapper, Map<String, Object> map){
-        return mapper.convertValue(map, ElasticEdgeDocument.class);
+    public static ElasticEdge convertMapToEdgeDocument(ObjectMapper mapper, Map<String, Object> map){
+        return mapper.convertValue(map, ElasticEdge.class);
     }
-    public static ElasticVertexDocument convertMapToVertexDocument(ObjectMapper mapper, Map<String, Object> map){
-        return mapper.convertValue(map, ElasticVertexDocument.class);
+    public static ElasticVertex convertMapToVertexDocument(ObjectMapper mapper, Map<String, Object> map){
+        return mapper.convertValue(map, ElasticVertex.class);
     }
 
     public static Object value(ObjectMapper mapper, ElasticProperty property){

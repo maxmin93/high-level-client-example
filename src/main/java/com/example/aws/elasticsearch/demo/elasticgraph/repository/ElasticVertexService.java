@@ -1,6 +1,6 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
-import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertexDocument;
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.example.aws.elasticsearch.demo.elasticgraph.util.ElasticGraphHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +17,8 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -45,7 +47,33 @@ public class ElasticVertexService {
 
     ///////////////////////////////////////////////////////////////
 
-    public String createDocument(ElasticVertexDocument document) throws Exception {
+    public long count() throws Exception {
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+
+        CountRequest countRequest = new CountRequest().indices(INDEX);
+        countRequest.source(searchSourceBuilder);
+        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
+        return countResponse.getCount();
+    }
+
+    public long count(String datasource) throws Exception {
+        // match to datasource
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource));
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder);
+
+        CountRequest countRequest = new CountRequest().indices(INDEX);
+        countRequest.source(searchSourceBuilder);
+        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
+        return countResponse.getCount();
+    }
+
+    ///////////////////////////////////////////////////////////////
+
+    public String createDocument(ElasticVertex document) throws Exception {
         if( document.getId() == null || document.getId().isEmpty() ){
             UUID uuid = UUID.randomUUID();      // random document_id
             document.setId(uuid.toString());
@@ -59,8 +87,8 @@ public class ElasticVertexService {
         return indexResponse.getResult().name();
     }
 
-    public String updateDocument(ElasticVertexDocument document) throws Exception {
-        ElasticVertexDocument existing = findById(document.getId());
+    public String updateDocument(ElasticVertex document) throws Exception {
+        ElasticVertex existing = findById(document.getId());
         if( existing == null ) return createDocument(document);
 
         UpdateRequest updateRequest = new UpdateRequest().index(INDEX)
@@ -79,17 +107,17 @@ public class ElasticVertexService {
 
     ///////////////////////////////////////////////////////////////
 
-    public List<ElasticVertexDocument> findAll() throws Exception {
+    public List<ElasticVertex> findAll() throws Exception {
         SearchRequest searchRequest = new SearchRequest(INDEX);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
         searchRequest.source(searchSourceBuilder);
 
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-        return ElasticGraphHelper.getSearchResult(searchResponse, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.getSearchResult(searchResponse, mapper, ElasticVertex.class);
     }
 
-    public ElasticVertexDocument findById(String id) throws Exception {
+    public ElasticVertex findById(String id) throws Exception {
         GetRequest getRequest = new GetRequest(INDEX).id(id);
 
         GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
@@ -99,32 +127,32 @@ public class ElasticVertexService {
 
     ///////////////////////////////////////////////////////////////
 
-    public List<ElasticVertexDocument> findByLabel(int size, String label) throws Exception {
+    public List<ElasticVertex> findByLabel(int size, String label) throws Exception {
         // match to label
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .filter(termQuery("label", label));
         // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertex.class);
     }
 
-    public List<ElasticVertexDocument> findByDatasource(int size, String datasource) throws Exception {
+    public List<ElasticVertex> findByDatasource(int size, String datasource) throws Exception {
         // match to datasource
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .filter(termQuery("datasource", datasource));
         // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertex.class);
     }
 
-    public List<ElasticVertexDocument> findByDatasourceAndLabel(int size, String datasource, String label) throws Exception {
+    public List<ElasticVertex> findByDatasourceAndLabel(int size, String datasource, String label) throws Exception {
         // match to datasource
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .filter(termQuery("datasource", datasource))
                 .filter(termQuery("label", label));
         // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertex.class);
     }
 
-    public List<ElasticVertexDocument> findByDatasourceAndPropertyKey(
+    public List<ElasticVertex> findByDatasourceAndPropertyKey(
                 int size, String datasource, String key) throws Exception{
         // define : nested query
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
@@ -135,10 +163,10 @@ public class ElasticVertexService {
                         )
                         , ScoreMode.None) );
         // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertex.class);
     }
 
-    public List<ElasticVertexDocument> findByDatasourceAndPropertyValue(
+    public List<ElasticVertex> findByDatasourceAndPropertyValue(
                 int size, String datasource, String value) throws Exception{
         // define : nested query
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
@@ -149,6 +177,6 @@ public class ElasticVertexService {
                         )
                         , ScoreMode.Total) );
         // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertexDocument.class);
+        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticVertex.class);
     }
 }

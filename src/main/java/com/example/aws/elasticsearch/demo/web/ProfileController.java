@@ -1,4 +1,4 @@
-package com.example.aws.elasticsearch.demo.controller;
+package com.example.aws.elasticsearch.demo.web;
 
 import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
 import com.example.aws.elasticsearch.demo.profilesample.ProfileService;
