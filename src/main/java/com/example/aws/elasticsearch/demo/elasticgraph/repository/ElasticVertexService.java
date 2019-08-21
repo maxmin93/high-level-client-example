@@ -2,7 +2,6 @@ package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertexDocument;
 import com.example.aws.elasticsearch.demo.elasticgraph.util.ElasticGraphHelper;
-import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.join.ScoreMode;
@@ -21,15 +20,11 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import javax.xml.bind.annotation.XmlType;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.example.aws.elasticsearch.demo.profilesample.Constant.INDEX;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 @Slf4j

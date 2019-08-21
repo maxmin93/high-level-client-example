@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
 @Data
-public class ElasticProperty {
+public final class ElasticProperty {
 
     private String key;
     private String type;
     private String value;
 
     public Object value(ObjectMapper mapper){
-        if( value == null ) return null;
+        if( value == null || value.isEmpty() ) return null;
         Object translated = (Object)value;
 
         try {

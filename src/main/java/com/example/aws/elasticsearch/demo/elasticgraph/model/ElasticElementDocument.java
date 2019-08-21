@@ -7,9 +7,9 @@ import java.util.List;
 @Data
 public class ElasticElementDocument {
 
-    private String id;
-    private String label;
-    private String datasource;
-    private List<ElasticProperty> properties;
+    protected String id;
+    protected String label;
+    protected String datasource;
+    protected List<ElasticProperty> properties;
 
 }

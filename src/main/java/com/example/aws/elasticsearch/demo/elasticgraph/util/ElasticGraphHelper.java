@@ -1,6 +1,7 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.util;
 
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdgeDocument;
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertexDocument;
 import com.example.aws.elasticsearch.demo.profilesample.model.ProfileDocument;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,20 @@ public final class ElasticGraphHelper {
     }
     public static ElasticVertexDocument convertMapToVertexDocument(ObjectMapper mapper, Map<String, Object> map){
         return mapper.convertValue(map, ElasticVertexDocument.class);
+    }
+
+    public static Object value(ObjectMapper mapper, ElasticProperty property){
+        if( property == null ) return null;
+        Object translated = (Object)property.getValue();
+
+        try {
+            Class<?> clazz = Class.forName(property.getType());
+            translated = (Object) mapper.convertValue(property.getValue(), clazz);
+        }
+        catch (ClassNotFoundException ex){
+            return translated;
+        }
+        return translated;
     }
 
     public static <T> List<T> getSearchResult(SearchResponse response, ObjectMapper mapper, Class<T> tClass) {
