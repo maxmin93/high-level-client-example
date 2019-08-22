@@ -42,22 +42,13 @@ curl -X PUT "localhost:8080/elastic/reset"
         return new ResponseEntity(base.reset(), HttpStatus.OK);
     }
 
-    @GetMapping("/v/count")
-    public ResponseEntity countVertices() throws Exception {
-        return new ResponseEntity(base.countV(), HttpStatus.OK);
+    @GetMapping("/count")
+    public ResponseEntity count() throws Exception {
+        return new ResponseEntity(base.count(), HttpStatus.OK);
     }
-    @GetMapping("/{datasource}/v/count")
-    public ResponseEntity countVertices(@PathVariable String datasource) throws Exception {
-        return new ResponseEntity(base.countV(datasource), HttpStatus.OK);
-    }
-
-    @GetMapping("/e/count")
-    public ResponseEntity countEdges() throws Exception {
-        return new ResponseEntity(base.countE(), HttpStatus.OK);
-    }
-    @GetMapping("/{datasource}/e/count")
-    public ResponseEntity countEdges(@PathVariable String datasource) throws Exception {
-        return new ResponseEntity(base.countE(datasource), HttpStatus.OK);
+    @GetMapping("/{datasource}/count")
+    public ResponseEntity count(@PathVariable String datasource) throws Exception {
+        return new ResponseEntity(base.count(datasource), HttpStatus.OK);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -73,24 +64,24 @@ curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"e03"
     */
     @PostMapping("/v")
     public ResponseEntity addVertex(@RequestBody ElasticVertex document) throws Exception {
-        return new ResponseEntity(base.addVertex(document), HttpStatus.CREATED);
+        return new ResponseEntity(base.addV(document), HttpStatus.CREATED);
     }
     @PostMapping("/e")
     public ResponseEntity addEdge(@RequestBody ElasticEdge document) throws Exception {
-        return new ResponseEntity(base.addEdge(document), HttpStatus.CREATED);
+        return new ResponseEntity(base.addE(document), HttpStatus.CREATED);
     }
 
     /*
 curl -X PUT -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"v02", "label":"person", "datasource": "sample", "properties": [ {"key":"technology", "type": "java.lang.String", "value":"typescript"}, {"key":"years_of_experience", "type": "java.lang.Integer", "value":"2"}, {"key":"gpa", "type": "java.lang.Float", "value":"3.7"}] }' localhost:8080/elastic/v
-curl -X PUT -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"e02", "label":"knows", "datasource": "sample", "sid":"v02", "tid","v03", "properties": [ {"key":"year", "type": "java.lang.String", "value":"2003"}] }' localhost:8080/elastic/e
+curl -X PUT -H "Content-Type: application/json; charset=utf-8" -d '{ "id":"e02", "label":"knows", "datasource": "sample", "sid":"v02", "tid":"v03", "properties": [ {"key":"year", "type": "java.lang.String", "value":"2003"}] }' localhost:8080/elastic/e
     */
     @PutMapping("/v")
     public ResponseEntity updateVertex(@RequestBody ElasticVertex document) throws Exception {
-        return new ResponseEntity(base.updateVertex(document), HttpStatus.CREATED);
+        return new ResponseEntity(base.updateV(document), HttpStatus.CREATED);
     }
     @PutMapping("/e")
     public ResponseEntity updateEdge(@RequestBody ElasticEdge document) throws Exception {
-        return new ResponseEntity(base.updateEdge(document), HttpStatus.CREATED);
+        return new ResponseEntity(base.updateE(document), HttpStatus.CREATED);
     }
 
     /*
@@ -99,11 +90,16 @@ curl -X DELETE "localhost:8080/elastic/v/v04"
     */
     @DeleteMapping("/v/{id}")
     public String removeVertex(@PathVariable String id) throws Exception {
-        return base.removeVertex(id);
+        return base.removeV(id);
     }
     @DeleteMapping("/e/{id}")
     public String removeEdge(@PathVariable String id) throws Exception {
-        return base.removeEdge(id);
+        return base.removeE(id);
+    }
+
+    @DeleteMapping("/{datasource}")
+    public ResponseEntity remove(@PathVariable String datasource) throws Exception {
+        return new ResponseEntity(base.remove(datasource), HttpStatus.OK);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -113,16 +109,16 @@ curl -X GET "localhost:8080/elastic/v/v01"
 curl -X GET "localhost:8080/elastic/e/e01"
     */
     @GetMapping("/v/{id}")
-    public ElasticVertex findVertex(@PathVariable String id) throws Exception {
-        ElasticVertex d = base.findVertex(id);
+    public ElasticVertex findV(@PathVariable String id) throws Exception {
+        ElasticVertex d = base.findV(id);
         for(ElasticProperty p : d.getProperties()){
             System.out.println(p.getKey() +" = "+p.value(mapper).toString() );
         }
         return d;
     }
     @GetMapping("/e/{id}")
-    public ElasticEdge findEdge(@PathVariable String id) throws Exception {
-        return base.findEdge(id);
+    public ElasticEdge findE(@PathVariable String id) throws Exception {
+        return base.findE(id);
     }
 
     /*
@@ -130,12 +126,12 @@ curl -X GET "localhost:8080/elastic/sample/v"
 curl -X GET "localhost:8080/elastic/sample/e"
     */
     @GetMapping("/{datasource}/v")
-    public List<ElasticVertex> findVertices(@PathVariable String datasource) throws Exception {
-        return base.findVerticesByDatasource(datasource);
+    public List<ElasticVertex> findV_All(@PathVariable String datasource) throws Exception {
+        return base.findV_Datasource(datasource);
     }
     @GetMapping("/{datasource}/e")
-    public List<ElasticEdge> findEdges(@PathVariable String datasource) throws Exception {
-        return base.findEdgesByDatasource(datasource);
+    public List<ElasticEdge> findE_All(@PathVariable String datasource) throws Exception {
+        return base.findE_Datasource(datasource);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -144,20 +140,101 @@ curl -X GET "localhost:8080/elastic/sample/e"
 curl -X GET "localhost:8080/elastic/sample/v/label?q=person"
 curl -X GET "localhost:8080/elastic/sample/e/label?q=person"
     */
-    @GetMapping(value = "/{datasource}/v/label")
-    public List<ElasticVertex> findVerticesByLabel(
+    @GetMapping(value = "/{datasource}/v/labels")
+    public List<ElasticVertex> findV_Label(
             @PathVariable String datasource,
-            @RequestParam(value = "q") String label
+            @RequestParam(value = "q") List<String> labels
     ) throws Exception {
-        return base.findVerticesByDatasourceAndLabel(datasource, label);
+        String[] array = new String[labels.size()];
+        return base.findV_DatasourceAndLabels(datasource, labels.toArray(array));
     }
 
-    @GetMapping(value = "/{datasource}/e/label")
-    public List<ElasticEdge> findEdgesByLabel(
+    @GetMapping(value = "/{datasource}/e/labels")
+    public List<ElasticEdge> findE_Label(
             @PathVariable String datasource,
-            @RequestParam(value = "q") String label
+            @RequestParam(value = "q") List<String> labels
     ) throws Exception {
-        return base.findEdgesByDatasourceAndLabel(datasource, label);
+        String[] array = new String[labels.size()];
+        return base.findE_DatasourceAndLabels(datasource, labels.toArray(array));
+    }
+
+    @GetMapping(value = "/{datasource}/v/key")
+    public List<ElasticVertex> findV_PropertyKey(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") String key
+    ) throws Exception {
+        return base.findV_DatasourceAndPropertyKey(datasource, key);
+    }
+
+    @GetMapping(value = "/{datasource}/e/key")
+    public List<ElasticEdge> findE_PropertyKey(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") String key
+    ) throws Exception {
+        return base.findE_DatasourceAndPropertyKey(datasource, key);
+    }
+
+    @GetMapping(value = "/{datasource}/v/value")
+    public List<ElasticVertex> findV_PropertyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") String value,
+            @RequestParam(value = "partial", required=false, defaultValue="false") boolean usePartial
+    ) throws Exception {
+        return usePartial
+                ? base.findV_DatasourceAndPropertyValuePartial(datasource, value)
+                : base.findV_DatasourceAndPropertyValue(datasource, value);
+    }
+
+    @GetMapping(value = "/{datasource}/e/value")
+    public List<ElasticEdge> findE_PropertyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") String value,
+            @RequestParam(value = "partial", required=false, defaultValue="false") boolean usePartial
+    ) throws Exception {
+        return usePartial
+                ? base.findE_DatasourceAndPropertyValuePartial(datasource, value)
+                : base.findE_DatasourceAndPropertyValue(datasource, value);
+
+    }
+
+    ////////////////////////////////////////////////
+
+
+    @GetMapping(value = "/{datasource}/v/keyvalue")
+    public List<ElasticVertex> findV_PropertyKeyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "key") String key,
+            @RequestParam(value = "value") String value
+    ) throws Exception {
+        return base.findV_DatasourceAndPropertyKeyValue(datasource, key, value);
+    }
+    @GetMapping(value = "/{datasource}/e/keyvalue")
+    public List<ElasticEdge> findE_PropertyKeyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "key") String key,
+            @RequestParam(value = "value") String value
+    ) throws Exception {
+        return base.findE_DatasourceAndPropertyKeyValue(datasource, key, value);
+    }
+
+
+    @GetMapping(value = "/{datasource}/v/labelkeyvalue")
+    public List<ElasticVertex> findV_LabelAndPropertyKeyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "label") String label,
+            @RequestParam(value = "key") String key,
+            @RequestParam(value = "value") String value
+    ) throws Exception {
+        return base.findV_DatasourceAndLabelAndPropertyKeyValue(datasource, label, key, value);
+    }
+    @GetMapping(value = "/{datasource}/e/labelkeyvalue")
+    public List<ElasticEdge> findE_LabelAndPropertyKeyValue(
+            @PathVariable String datasource,
+            @RequestParam(value = "label") String label,
+            @RequestParam(value = "key") String key,
+            @RequestParam(value = "value") String value
+    ) throws Exception {
+        return base.findE_DatasourceAndLabelAndPropertyKeyValue(datasource, label, key, value);
     }
 
 }

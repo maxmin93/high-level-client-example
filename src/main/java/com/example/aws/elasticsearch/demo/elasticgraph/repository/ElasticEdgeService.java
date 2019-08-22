@@ -1,182 +1,122 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdge;
-import com.example.aws.elasticsearch.demo.elasticgraph.util.ElasticGraphHelper;
+
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
+import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.core.CountRequest;
-import org.elasticsearch.client.core.CountResponse;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import java.util.stream.Collectors;
 
 @Slf4j
-public final class ElasticEdgeService {
+public final class ElasticEdgeService extends ElasticElementService {
 
-    private RestHighLevelClient client;
-    private ObjectMapper mapper;
     private final String INDEX;
 
     public ElasticEdgeService(
             RestHighLevelClient client,     // elasticsearch config
             ObjectMapper mapper             // spring boot web starter
     ) {
-        this.client = client;
-        this.mapper = mapper;
+        super(client, mapper);
         this.INDEX = ElasticGraphService.INDEX_EDGE;
     }
 
     ///////////////////////////////////////////////////////////////
 
     public long count() throws Exception {
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-
-        CountRequest countRequest = new CountRequest().indices(INDEX);
-        countRequest.source(searchSourceBuilder);
-        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
-        return countResponse.getCount();
+        return super.count(INDEX);
     }
 
     public long count(String datasource) throws Exception {
-        // match to datasource
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource));
-
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(queryBuilder);
-
-        CountRequest countRequest = new CountRequest().indices(INDEX);
-        countRequest.source(searchSourceBuilder);
-        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
-        return countResponse.getCount();
+        return super.count(INDEX, datasource);
     }
 
     ///////////////////////////////////////////////////////////////
 
     public String createDocument(ElasticEdge document) throws Exception {
-        if( document.getId() == null || document.getId().isEmpty() ){
-            UUID uuid = UUID.randomUUID();      // random document_id
-            document.setId(uuid.toString());
-        }
-
-        IndexRequest indexRequest = new IndexRequest(INDEX)
-                .id(document.getId())
-                .source(ElasticGraphHelper.convertEdgeDocumentToMap(mapper, document));
-
-        IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
-        return indexResponse.getResult().name();
+        return super.createDocument(INDEX, ElasticEdge.class, document);
     }
 
     public String updateDocument(ElasticEdge document) throws Exception {
-        ElasticEdge existing = findById(document.getId());
-        if( existing == null ) return createDocument(document);
-
-        UpdateRequest updateRequest = new UpdateRequest().index(INDEX)
-                .id(existing.getId())
-                .doc(ElasticGraphHelper.convertEdgeDocumentToMap(mapper, document));
-
-        UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-        return updateResponse.getResult().name();
+        return super.updateDocument(INDEX, ElasticEdge.class, document);
     }
 
     public String deleteDocument(String id) throws Exception {
-        DeleteRequest deleteRequest = new DeleteRequest(INDEX).id(id);
-        DeleteResponse response = client.delete(deleteRequest, RequestOptions.DEFAULT);
-        return response.getResult().name();
+        return super.deleteDocument(INDEX, id);
+    }
+    public long deleteDocuments(String datasource) throws Exception {
+        return super.deleteDocuments(INDEX, datasource);
     }
 
     ///////////////////////////////////////////////////////////////
 
     public List<ElasticEdge> findAll() throws Exception {
-        SearchRequest searchRequest = new SearchRequest(INDEX);
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-        searchRequest.source(searchSourceBuilder);
-
-        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-        return ElasticGraphHelper.getSearchResult(searchResponse, mapper, ElasticEdge.class);
+        return super.findAll(INDEX, ElasticEdge.class);
     }
 
     public ElasticEdge findById(String id) throws Exception {
-        GetRequest getRequest = new GetRequest(INDEX).id(id);
-
-        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
-        Map<String, Object> resultMap = getResponse.getSource();
-        return ElasticGraphHelper.convertMapToEdgeDocument(mapper, resultMap);
+        return super.findById(INDEX, ElasticEdge.class, id);
     }
 
     ///////////////////////////////////////////////////////////////
 
+    public List<ElasticEdge> findByIDs(String[] ids) throws Exception {
+        return super.findByIDs(INDEX, ElasticEdge.class, ids);
+    }
+
     public List<ElasticEdge> findByLabel(int size, String label) throws Exception {
-        // match to label
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("label", label));
-        // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+        return super.findByLabel(INDEX, ElasticEdge.class, size, label);
     }
 
     public List<ElasticEdge> findByDatasource(int size, String datasource) throws Exception {
-        // match to datasource
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource));
-        // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+        return super.findByDatasource(INDEX, ElasticEdge.class, size, datasource);
     }
 
-    public List<ElasticEdge> findByDatasourceAndLabel(int size, String datasource, String label) throws Exception {
-        // match to datasource
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource))
-                .filter(termQuery("label", label));
-        // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+    public List<ElasticEdge> findByDatasourceAndLabels(int size, String datasource, String[] labels) throws Exception {
+        return super.findByDatasourceAndLabels(INDEX, ElasticEdge.class, size, datasource, labels);
     }
 
-    public List<ElasticEdge> findByDatasourceAndPropertyKey(
-            int size, String datasource, String key) throws Exception{
-        // define : nested query
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource))
-                .must(QueryBuilders.nestedQuery("properties",
-                        QueryBuilders.boolQuery().must(
-                                termQuery("properties.key", key)
-                        )
-                        , ScoreMode.None) );
-        // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+    public List<ElasticEdge> findByDatasourceAndPropertyKey(int size, String datasource, String key) throws Exception{
+        return super.findByDatasourceAndPropertyKey(INDEX, ElasticEdge.class, size, datasource, key);
     }
 
-    public List<ElasticEdge> findByDatasourceAndPropertyValue(
-            int size, String datasource, String value) throws Exception{
-        // define : nested query
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource))
-                .must(QueryBuilders.nestedQuery("properties",
-                        QueryBuilders.boolQuery().must(
-                                termQuery("properties.value", value)
-                        )
-                        , ScoreMode.Total) );
-        // search
-        return ElasticGraphHelper.doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+    public List<ElasticEdge> findByDatasourceAndPropertyValue(int size, String datasource, String value) throws Exception{
+        List<ElasticEdge> list = super.findByDatasourceAndPropertyValue(INDEX, ElasticEdge.class, size, datasource, value);
+        return list.stream().filter(r-> {
+                    for(ElasticProperty p : r.getProperties()){
+                        if( p.getValue().equalsIgnoreCase(value) ) return true;
+                    }
+                    return false;
+                }).collect(Collectors.toList());
     }
+    public List<ElasticEdge> findByDatasourceAndPropertyValuePartial(int size, String datasource, String value) throws Exception{
+        return super.findByDatasourceAndPropertyValuePartial(INDEX, ElasticEdge.class, size, datasource, value);
+    }
+
+    public List<ElasticEdge> findByDatasourceAndPropertyKeyValue(int size, String datasource, String key, String value) throws Exception{
+        List<ElasticEdge> list = super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, key, value);
+        return list.stream().filter(r-> {
+                    for(ElasticProperty p : r.getProperties()){
+                        if( p.getKey().equals(key) ){
+                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                        }
+                    }
+                    return false;
+                }).collect(Collectors.toList());
+    }
+
+    public List<ElasticEdge> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
+        List<ElasticEdge> list = super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, label, key, value);
+        return list.stream().filter(r-> {
+                    for(ElasticProperty p : r.getProperties()){
+                        if( p.getKey().equals(key) ){
+                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                        }
+                    }
+                    return false;
+                }).collect(Collectors.toList());
+    }
+
 }
