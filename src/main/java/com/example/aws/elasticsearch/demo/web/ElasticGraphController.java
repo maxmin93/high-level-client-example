@@ -148,7 +148,6 @@ curl -X GET "localhost:8080/elastic/sample/e/label?q=person"
         String[] array = new String[labels.size()];
         return base.findV_DatasourceAndLabels(datasource, labels.toArray(array));
     }
-
     @GetMapping(value = "/{datasource}/e/labels")
     public List<ElasticEdge> findE_Label(
             @PathVariable String datasource,
@@ -158,43 +157,72 @@ curl -X GET "localhost:8080/elastic/sample/e/label?q=person"
         return base.findE_DatasourceAndLabels(datasource, labels.toArray(array));
     }
 
-    @GetMapping(value = "/{datasource}/v/key")
+
+    @GetMapping(value = "/{datasource}/v/keys")
+    public List<ElasticVertex> findV_PropertyKey(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") List<String> keys
+    ) throws Exception {
+        String[] array = new String[keys.size()];
+        return base.findV_DatasourceAndPropertyKeys(datasource, keys.toArray(array));
+    }
+    @GetMapping(value = "/{datasource}/e/keys")
+    public List<ElasticEdge> findE_PropertyKey(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") List<String> keys
+    ) throws Exception {
+        String[] array = new String[keys.size()];
+        return base.findE_DatasourceAndPropertyKeys(datasource, keys.toArray(array));
+    }
+
+
+    @GetMapping(value = "/{datasource}/v/notkey")
     public List<ElasticVertex> findV_PropertyKey(
             @PathVariable String datasource,
             @RequestParam(value = "q") String key
     ) throws Exception {
-        return base.findV_DatasourceAndPropertyKey(datasource, key);
+        return base.findV_DatasourceAndPropertyKeyNot(datasource, key);
     }
-
-    @GetMapping(value = "/{datasource}/e/key")
+    @GetMapping(value = "/{datasource}/e/notkey")
     public List<ElasticEdge> findE_PropertyKey(
             @PathVariable String datasource,
             @RequestParam(value = "q") String key
     ) throws Exception {
-        return base.findE_DatasourceAndPropertyKey(datasource, key);
+        return base.findE_DatasourceAndPropertyKeyNot(datasource, key);
     }
+
+
+    @GetMapping(value = "/{datasource}/v/values")
+    public List<ElasticVertex> findV_PropertyValues(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") List<String> values
+    ) throws Exception {
+        String[] array = new String[values.size()];
+        return base.findV_DatasourceAndPropertyValues(datasource, values.toArray(array));
+    }
+    @GetMapping(value = "/{datasource}/e/values")
+    public List<ElasticEdge> findE_PropertyValues(
+            @PathVariable String datasource,
+            @RequestParam(value = "q") List<String> values
+    ) throws Exception {
+        String[] array = new String[values.size()];
+        return base.findE_DatasourceAndPropertyValues(datasource, values.toArray(array));
+    }
+
 
     @GetMapping(value = "/{datasource}/v/value")
-    public List<ElasticVertex> findV_PropertyValue(
+    public List<ElasticVertex> findV_PropertyValuePartial(
             @PathVariable String datasource,
-            @RequestParam(value = "q") String value,
-            @RequestParam(value = "partial", required=false, defaultValue="false") boolean usePartial
+            @RequestParam(value = "q") String value
     ) throws Exception {
-        return usePartial
-                ? base.findV_DatasourceAndPropertyValuePartial(datasource, value)
-                : base.findV_DatasourceAndPropertyValue(datasource, value);
+        return base.findV_DatasourceAndPropertyValuePartial(datasource, value);
     }
-
     @GetMapping(value = "/{datasource}/e/value")
-    public List<ElasticEdge> findE_PropertyValue(
+    public List<ElasticEdge> findE_PropertyValuePartial(
             @PathVariable String datasource,
-            @RequestParam(value = "q") String value,
-            @RequestParam(value = "partial", required=false, defaultValue="false") boolean usePartial
+            @RequestParam(value = "q") String value
     ) throws Exception {
-        return usePartial
-                ? base.findE_DatasourceAndPropertyValuePartial(datasource, value)
-                : base.findE_DatasourceAndPropertyValue(datasource, value);
-
+        return base.findE_DatasourceAndPropertyValuePartial(datasource, value);
     }
 
     ////////////////////////////////////////////////

@@ -147,21 +147,30 @@ public class ElasticGraphAPI implements BaseGraphAPI {
         return vertices.findByDatasourceAndLabels(size, datasource, labels);
     }
 
-    // V : datasource + property.key
-    public List<ElasticVertex> findV_DatasourceAndPropertyKey(String datasource, String key) throws Exception {
-        return vertices.findByDatasourceAndPropertyKey(DEFAULT_SIZE, datasource, key);
+    // V : datasource + (NOT property.keys)
+    public List<ElasticVertex> findV_DatasourceAndPropertyKeyNot(String datasource, String key) throws Exception {
+        return vertices.findByDatasourceAndPropertyKeyNot(DEFAULT_SIZE, datasource, key);
     }
-    public List<ElasticVertex> findV_DatasourceAndPropertyKey(int size, String datasource, String key) throws Exception {
-        return vertices.findByDatasourceAndPropertyKey(size, datasource, key);
+    public List<ElasticVertex> findV_DatasourceAndPropertyKeyNot(int size, String datasource, String key) throws Exception {
+        return vertices.findByDatasourceAndPropertyKeyNot(size, datasource, key);
     }
 
-    // V : datasource + property.value
-    public List<ElasticVertex> findV_DatasourceAndPropertyValue(String datasource, String value) throws Exception {
-        return vertices.findByDatasourceAndPropertyValue(DEFAULT_SIZE, datasource, value);
+    // V : datasource + property.keys
+    public List<ElasticVertex> findV_DatasourceAndPropertyKeys(String datasource, String[] keys) throws Exception {
+        return vertices.findByDatasourceAndPropertyKeys(DEFAULT_SIZE, datasource, keys);
     }
-    public List<ElasticVertex> findV_DatasourceAndPropertyValue(int size, String datasource, String value) throws Exception {
-        return vertices.findByDatasourceAndPropertyValue(size, datasource, value);
+    public List<ElasticVertex> findV_DatasourceAndPropertyKeys(int size, String datasource, String[] keys) throws Exception {
+        return vertices.findByDatasourceAndPropertyKeys(size, datasource, keys);
     }
+
+    // V : datasource + property.values
+    public List<ElasticVertex> findV_DatasourceAndPropertyValues(String datasource, String[] values) throws Exception {
+        return vertices.findByDatasourceAndPropertyValues(DEFAULT_SIZE, datasource, values);
+    }
+    public List<ElasticVertex> findV_DatasourceAndPropertyValues(int size, String datasource, String[] values) throws Exception {
+        return vertices.findByDatasourceAndPropertyValues(size, datasource, values);
+    }
+
     public List<ElasticVertex> findV_DatasourceAndPropertyValuePartial(String datasource, String value) throws Exception {
         return vertices.findByDatasourceAndPropertyValuePartial(DEFAULT_SIZE, datasource, value);
     }
@@ -206,21 +215,30 @@ public class ElasticGraphAPI implements BaseGraphAPI {
         return edges.findByDatasourceAndLabels(size, datasource, labels);
     }
 
-    // E : datasource + property.key
-    public List<ElasticEdge> findE_DatasourceAndPropertyKey(String datasource, String key) throws Exception {
-        return edges.findByDatasourceAndPropertyKey(DEFAULT_SIZE, datasource, key);
+    // E : datasource + property.keys
+    public List<ElasticEdge> findE_DatasourceAndPropertyKeys(String datasource, String[] keys) throws Exception {
+        return edges.findByDatasourceAndPropertyKeys(DEFAULT_SIZE, datasource, keys);
     }
-    public List<ElasticEdge> findE_DatasourceAndPropertyKey(int size, String datasource, String key) throws Exception {
-        return edges.findByDatasourceAndPropertyKey(size, datasource, key);
+    public List<ElasticEdge> findE_DatasourceAndPropertyKeys(int size, String datasource, String[] keys) throws Exception {
+        return edges.findByDatasourceAndPropertyKeys(size, datasource, keys);
     }
 
-    // E : datasource + property.value
-    public List<ElasticEdge> findE_DatasourceAndPropertyValue(String datasource, String value) throws Exception {
-        return edges.findByDatasourceAndPropertyValue(DEFAULT_SIZE, datasource, value);
+    // E : datasource + (NOT property.key)
+    public List<ElasticEdge> findE_DatasourceAndPropertyKeyNot(String datasource, String key) throws Exception {
+        return edges.findByDatasourceAndPropertyKeyNot(DEFAULT_SIZE, datasource, key);
     }
-    public List<ElasticEdge> findE_DatasourceAndPropertyValue(int size, String datasource, String value) throws Exception {
-        return edges.findByDatasourceAndPropertyValue(size, datasource, value);
+    public List<ElasticEdge> findE_DatasourceAndPropertyKeyNot(int size, String datasource, String key) throws Exception {
+        return edges.findByDatasourceAndPropertyKeyNot(size, datasource, key);
     }
+
+    // E : datasource + property.values
+    public List<ElasticEdge> findE_DatasourceAndPropertyValues(String datasource, String[] values) throws Exception {
+        return edges.findByDatasourceAndPropertyValues(DEFAULT_SIZE, datasource, values);
+    }
+    public List<ElasticEdge> findE_DatasourceAndPropertyValues(int size, String datasource, String[] values) throws Exception {
+        return edges.findByDatasourceAndPropertyValues(size, datasource, values);
+    }
+
     public List<ElasticEdge> findE_DatasourceAndPropertyValuePartial(String datasource, String value) throws Exception {
         return edges.findByDatasourceAndPropertyValuePartial(DEFAULT_SIZE, datasource, value);
     }

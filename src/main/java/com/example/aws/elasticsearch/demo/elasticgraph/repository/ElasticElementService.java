@@ -4,6 +4,7 @@ import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticElement;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.example.aws.elasticsearch.demo.elasticgraph.util.ElasticGraphHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -19,6 +20,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -174,30 +176,47 @@ public class ElasticElementService {
         return doSearch(index, size, queryBuilder, client, mapper, tClass);
     }
 
-    public <T> List<T> findByDatasourceAndPropertyKey(
+    public <T> List<T> findByDatasourceAndPropertyKeys(
+            String index, Class<T> tClass, int size, String datasource, String[] keys) throws Exception{
+        // define : nested query
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource));
+        // AND
+        for( String key : keys ){
+            queryBuilder = queryBuilder.must(QueryBuilders.nestedQuery("properties",
+                    QueryBuilders.boolQuery().must(
+                        termQuery("properties.key", key)
+                    ), ScoreMode.Max));
+        }
+        // search
+        return doSearch(index, size, queryBuilder, client, mapper, tClass);
+    }
+
+    public <T> List<T> findByDatasourceAndPropertyKeyNot(
             String index, Class<T> tClass, int size, String datasource, String key) throws Exception{
-        // System.out.println("findByDatasourceAndPropertyKey: "+index+"/"+datasource+"/"+key);
         // define : nested query
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .filter(termQuery("datasource", datasource))
-                .must(QueryBuilders.nestedQuery("properties",
+                .mustNot(QueryBuilders.nestedQuery("properties",
                         QueryBuilders.boolQuery().must(
-                            termQuery("properties.key", key.toLowerCase())
+                            termQuery("properties.key", key)
                         ), ScoreMode.Avg));
         // search
         return doSearch(index, size, queryBuilder, client, mapper, tClass);
     }
 
-    public <T> List<T> findByDatasourceAndPropertyValue(
-            String index, Class<T> tClass, int size, String datasource, String value) throws Exception{
-        // System.out.println("findByDatasourceAndPropertyValue: "+index+"/"+datasource+"/"+value);
+    public <T> List<T> findByDatasourceAndPropertyValues(
+            String index, Class<T> tClass, int size, String datasource, String[] values) throws Exception{
         // define : nested query
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .filter(termQuery("datasource", datasource))
-                .must(QueryBuilders.nestedQuery("properties",
-                        QueryBuilders.boolQuery().must(
-                            QueryBuilders.queryStringQuery("properties.value:\""+value.toLowerCase()+"\"")
-                        ), ScoreMode.Total));
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource));
+        // AND
+        for( String value : values ) {
+            queryBuilder = queryBuilder.must(QueryBuilders.nestedQuery("properties",
+                    QueryBuilders.boolQuery().must(
+                        QueryBuilders.queryStringQuery("properties.value:\"" + value.toLowerCase() + "\"")
+                    ), ScoreMode.Total));
+        }
         // search
         return doSearch(index, size, queryBuilder, client, mapper, tClass);
     }
