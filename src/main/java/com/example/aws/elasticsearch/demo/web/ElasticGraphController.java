@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -53,6 +54,19 @@ curl -X PUT "localhost:8080/elastic/reset"
     @GetMapping("/{datasource}/count")
     public ResponseEntity count(@PathVariable String datasource) throws Exception {
         return new ResponseEntity(base.count(datasource), HttpStatus.OK);
+    }
+    @GetMapping("/{datasource}/labels")
+    public ResponseEntity labels(@PathVariable String datasource) throws Exception {
+        return new ResponseEntity(base.labels(datasource), HttpStatus.OK);
+    }
+
+    @GetMapping("/{datasource}/v/{label}/keys")
+    public ResponseEntity vertexLabelKeys(@PathVariable String datasource, @PathVariable String label) throws Exception {
+        return new ResponseEntity(base.listVertexLabelKeys(datasource, label), HttpStatus.OK);
+    }
+    @GetMapping("/{datasource}/e/{label}/keys")
+    public ResponseEntity edgeLabelKeys(@PathVariable String datasource, @PathVariable String label) throws Exception {
+        return new ResponseEntity(base.listEdgeLabelKeys(datasource, label), HttpStatus.OK);
     }
 
     ///////////////////////////////////////////////////////////////

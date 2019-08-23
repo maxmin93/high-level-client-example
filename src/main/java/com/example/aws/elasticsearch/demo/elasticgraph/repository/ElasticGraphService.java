@@ -2,7 +2,10 @@ package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -10,11 +13,24 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.BucketOrder;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.ValueCount;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 @Slf4j
 public class ElasticGraphService {
@@ -88,6 +104,65 @@ public class ElasticGraphService {
         // if not exists index, create index
         if( !checkExistsIndex(INDEX_VERTEX) ) createIndex(INDEX_VERTEX);
         if( !checkExistsIndex(INDEX_EDGE) ) createIndex(INDEX_EDGE);
+    }
+
+    //////////////////////////////////////////////
+    // schema services
+
+    // REST API : Aggregation
+    // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/_metrics_aggregations.html
+
+    public Map<String, Long> listLabels(String index, String datasource) throws Exception {
+        // query : aggregation
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource)))
+                .aggregation(AggregationBuilders.terms("labels").field("label").order(BucketOrder.key(true)));
+
+        // request
+        SearchRequest searchRequest = new SearchRequest(index);
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        // response
+        Aggregations aggregations = searchResponse.getAggregations();
+        Terms labels = aggregations.get("labels");
+
+        Map<String, Long> result = new HashMap<>();
+        labels.getBuckets().forEach(b->{
+            result.put(b.getKeyAsString(), b.getDocCount());
+        });
+        return result;
+    }
+
+    public Map<String, Long> listLabelKeys(String index, String datasource, String label) throws Exception {
+        // query : aggregation
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .filter(termQuery("datasource", datasource))
+                    .filter(termQuery("label", label))
+                )
+                .aggregation(AggregationBuilders.nested("agg", "properties")
+                    .subAggregation(
+                        AggregationBuilders.terms("keys").field("properties.key")
+                            .subAggregation(
+                                AggregationBuilders.reverseNested("label_to_key")
+                            )
+                    ));
+
+        // request
+        SearchRequest searchRequest = new SearchRequest(index);
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        // response
+        Aggregations aggregations = searchResponse.getAggregations();
+        Nested agg = aggregations.get("agg");
+        Terms keys = agg.getAggregations().get("keys");
+
+        Map<String, Long> result = new HashMap<>();
+        keys.getBuckets().forEach(b->{
+            result.put(b.getKeyAsString(), b.getDocCount());
+        });
+        return result;
     }
 
 }

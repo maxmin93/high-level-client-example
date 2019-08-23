@@ -1,6 +1,7 @@
 package com.example.aws.elasticsearch.demo.elasticgraph;
 
 import com.example.aws.elasticsearch.demo.basegraph.BaseGraphAPI;
+import com.example.aws.elasticsearch.demo.basegraph.BaseTx;
 import com.example.aws.elasticsearch.demo.basegraph.model.BaseEdge;
 import com.example.aws.elasticsearch.demo.basegraph.model.BaseVertex;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdge;
@@ -10,6 +11,7 @@ import com.example.aws.elasticsearch.demo.elasticgraph.repository.ElasticGraphSe
 import com.example.aws.elasticsearch.demo.elasticgraph.repository.ElasticVertexService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -46,6 +48,18 @@ public class ElasticGraphAPI implements BaseGraphAPI {
         this.graph = new ElasticGraphService(client, mapper);
     }
 
+    @Override
+    public BaseTx tx(){
+        return new BaseTx() {
+            @Override public void failure() {
+            }
+            @Override public void success() {
+            }
+            @Override public void close() {
+            }
+        };
+    }
+
     @PostConstruct
     private void ready() throws Exception {
         graph.ready();      // if not exists index, create index
@@ -53,6 +67,14 @@ public class ElasticGraphAPI implements BaseGraphAPI {
 
     public boolean reset() throws Exception {
         return graph.resetIndex();
+    }
+
+    public String remove(String datasource) throws Exception {
+        Gson gson = new Gson();
+        JsonObject object = new JsonObject();
+        object.addProperty("V", vertices.deleteDocuments(datasource));
+        object.addProperty("E", edges.deleteDocuments(datasource));
+        return gson.toJson(object);
     }
 
     public String count() throws Exception {
@@ -69,13 +91,71 @@ public class ElasticGraphAPI implements BaseGraphAPI {
         object.addProperty("E", edges.count(datasource));
         return gson.toJson(object);
     }
-
-    public String remove(String datasource) throws Exception {
+    public String labels(String datasource) throws Exception {
         Gson gson = new Gson();
+        JsonElement jsonV = gson.fromJson( gson.toJson(listVertexLabels(datasource)), JsonElement.class);
+        JsonElement jsonE = gson.fromJson( gson.toJson(listEdgeLabels(datasource)), JsonElement.class);
+
         JsonObject object = new JsonObject();
-        object.addProperty("V", vertices.deleteDocuments(datasource));
-        object.addProperty("E", edges.deleteDocuments(datasource));
+        object.add("V", jsonV);
+        object.add("E", jsonE);
         return gson.toJson(object);
+    }
+
+    //////////////////////////////////////////////////
+    //
+    // schema services
+    //
+
+
+    @Override
+    public Map<String, Long> listVertexLabels(String datasource) {
+        try {
+            return graph.listLabels(ElasticGraphService.INDEX_VERTEX, datasource);
+        }
+        catch (Exception e) { return Collections.EMPTY_MAP; }
+    }
+    @Override
+    public Map<String, Long> listEdgeLabels(String datasource){
+        try {
+            return graph.listLabels(ElasticGraphService.INDEX_EDGE, datasource);
+        }
+        catch (Exception e) { return Collections.EMPTY_MAP; }
+    }
+
+    @Override
+    public Map<String, Long> listVertexLabelKeys(String datasource, String label) {
+        try {
+            return graph.listLabelKeys(ElasticGraphService.INDEX_VERTEX, datasource, label);
+        }
+        catch (Exception e) { return Collections.EMPTY_MAP; }
+    }
+    @Override
+    public Map<String, Long> listEdgeLabelKeys(String datasource, String label){
+        try {
+            return graph.listLabelKeys(ElasticGraphService.INDEX_EDGE, datasource, label);
+        }
+        catch (Exception e) { return Collections.EMPTY_MAP; }
+    }
+
+    @Override
+    public long countV(String datasource){
+        try{ return vertices.count(datasource); }
+        catch(Exception e){ return -1L; }
+    }
+    @Override
+    public long countE(String datasource){
+        try{ return edges.count(datasource); }
+        catch(Exception e){ return -1L; }
+    }
+
+    public long countV() {
+        try{ return vertices.count(); }
+        catch(Exception e){ return -1L; }
+    }
+    public long countE() {
+        try{ return edges.count(); }
+        catch(Exception e){ return -1L; }
     }
 
     //////////////////////////////////////////////////
@@ -152,26 +232,6 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     public void dropEdge(String id){
         try{ edges.deleteDocument(id); }
         catch (Exception e){ }
-    }
-
-    @Override
-    public long countV(String datasource){
-        try{ return vertices.count(datasource); }
-        catch(Exception e){ return -1L; }
-    }
-    @Override
-    public long countE(String datasource){
-        try{ return edges.count(datasource); }
-        catch(Exception e){ return -1L; }
-    }
-
-    public long countV() {
-        try{ return vertices.count(); }
-        catch(Exception e){ return -1L; }
-    }
-    public long countE() {
-        try{ return edges.count(); }
-        catch(Exception e){ return -1L; }
     }
 
     ///////////////////////////////////////////////////////////////
@@ -386,6 +446,38 @@ public class ElasticGraphAPI implements BaseGraphAPI {
                     .stream().map(r->(BaseEdge)r).collect(Collectors.toList());
         }
         catch(Exception e){ return Collections.EMPTY_LIST; }
+    }
+
+    @Override
+    public Collection<BaseEdge> findEdgesByDirection(String datasource, String vid, Direction direction){
+        try{
+            return edges.findByDatasourceAndDirection(DEFAULT_SIZE, datasource, vid, direction)
+                    .stream().map(r->(BaseEdge)r).collect(Collectors.toList());
+        }
+        catch(Exception e){ return Collections.EMPTY_LIST; }
+    }
+
+    @Override
+    public Collection<BaseEdge> findEdgesOfVertex(String datasource, String vid, Direction direction, final String[] labels){
+        if( labels.length > 0 ){
+            List<String> filterLabels = Arrays.asList(labels);
+            return findEdgesByDirection(datasource, vid, direction).stream()
+                    .filter(r->filterLabels.contains(r.getLabel())).collect(Collectors.toList());
+        }
+        return findEdgesByDirection(datasource, vid, direction);
+    }
+
+    @Override
+    public Collection<BaseEdge> findEdgesOfVertex(String datasource, String vid, Direction direction, String label, String key, Object value){
+        return findEdgesByDirection(datasource, vid, direction).stream()
+                .filter(r->{
+                    if( label != null && !label.equals(r.getLabel()) ) return false;
+                    if( key != null ){
+                        if( !r.keys().contains(key) ) return false;
+                        if( value != null && !r.getProperty(key).value().equals(value) ) return false;
+                    }
+                    return true;
+                }).collect(Collectors.toList());
     }
 
     ///////////////////////////////////////////////////////////////

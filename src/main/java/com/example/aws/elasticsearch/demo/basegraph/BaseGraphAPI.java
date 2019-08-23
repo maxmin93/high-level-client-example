@@ -5,11 +5,14 @@ import com.example.aws.elasticsearch.demo.basegraph.model.BaseVertex;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface BaseGraphAPI {
 
     enum Direction { BOTH, IN, OUT };
+
+    BaseTx tx();
 
     //////////////////////////////////////////////////
     //
@@ -33,6 +36,12 @@ public interface BaseGraphAPI {
 
     long countV(String datasource);
     long countE(String datasource);
+
+    Map<String, Long> listVertexLabels(String datasource);
+    Map<String, Long> listEdgeLabels(String datasource);
+
+    Map<String, Long> listVertexLabelKeys(String datasource, String label);
+    Map<String, Long> listEdgeLabelKeys(String datasource, String label);
 
     //////////////////////////////////////////////////
     //
@@ -80,6 +89,10 @@ public interface BaseGraphAPI {
     Collection<BaseEdge> findEdges(String datasource, String key, boolean hasNot);
     Collection<BaseEdge> findEdgesWithKeys(String datasource, final String[] keys);
     Collection<BaseEdge> findEdgesWithValues(String datasource, final String[] values);
+
+    Collection<BaseEdge> findEdgesByDirection(String datasource, String vid, Direction direction);
+    Collection<BaseEdge> findEdgesOfVertex(String datasource, String vid, Direction direction, final String[] labels);
+    Collection<BaseEdge> findEdgesOfVertex(String datasource, String vid, Direction direction, String label, String key, Object value);
 
 //    Collection<BaseEdge> findEdges(String datasource
 //            , List<String> ids, List<String> labels, List<String> keys, List<Object> values);
