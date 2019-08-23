@@ -30,6 +30,7 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,19 +64,17 @@ public class ElasticElementService {
         IndexRequest indexRequest = new IndexRequest(index)
                 .id(document.getId())
                 .source( mapper.convertValue((T)document, Map.class) );
-
         IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         return indexResponse.getResult().name();
     }
 
     public <T> String updateDocument(String index, Class<T> tClass, ElasticElement document) throws Exception {
-        ElasticElement existing = (ElasticElement) findById(index, tClass, document.getId());
-        if( existing == null ) return createDocument(index, tClass, document);
+        if( document.getId() == null || document.getId().isEmpty() )
+            return "NOT_FOUND";
 
         UpdateRequest updateRequest = new UpdateRequest().index(index)
-                .id(existing.getId())
+                .id(document.getId())
                 .doc( mapper.convertValue((T)document, Map.class) );
-
         UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
         return updateResponse.getResult().name();
     }
@@ -89,7 +88,7 @@ public class ElasticElementService {
     public long deleteDocuments(String index, String datasource) throws Exception {
         DeleteByQueryRequest request = new DeleteByQueryRequest(index);
         request.setQuery(new TermQueryBuilder("datasource", datasource));
-        request.setSlices(2);
+        // request.setSlices(2);
         request.setRefresh(true);
         request.setConflicts("proceed");
         BulkByScrollResponse bulkResponse = client.deleteByQuery(request, RequestOptions.DEFAULT);
@@ -136,10 +135,16 @@ public class ElasticElementService {
 
     public <T> T findById(String index, Class<T> tClass, String id) throws Exception {
         GetRequest getRequest = new GetRequest(index).id(id);
-
         GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
         Map<String, Object> resultMap = getResponse.getSource();
         return mapper.convertValue(resultMap, tClass);
+    }
+
+    public boolean existsId(String index, String id) throws Exception {
+        GetRequest getRequest = new GetRequest(index, id);
+        getRequest.fetchSourceContext(new FetchSourceContext(false));
+        getRequest.storedFields("_none_");
+        return client.exists(getRequest, RequestOptions.DEFAULT);
     }
 
     ///////////////////////////////////////////////////////////////
@@ -188,6 +193,19 @@ public class ElasticElementService {
                         termQuery("properties.key", key)
                     ), ScoreMode.Max));
         }
+        // search
+        return doSearch(index, size, queryBuilder, client, mapper, tClass);
+    }
+
+    public <T> List<T> findByDatasourceAndPropertyKey(
+            String index, Class<T> tClass, int size, String datasource, String key) throws Exception{
+        // define : nested query
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource))
+                .must(QueryBuilders.nestedQuery("properties",
+                        QueryBuilders.boolQuery().must(
+                            termQuery("properties.key", key)
+                        ), ScoreMode.Avg));
         // search
         return doSearch(index, size, queryBuilder, client, mapper, tClass);
     }

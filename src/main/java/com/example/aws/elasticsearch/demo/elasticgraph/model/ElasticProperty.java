@@ -4,6 +4,8 @@ import com.example.aws.elasticsearch.demo.basegraph.model.BaseProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
+import java.util.NoSuchElementException;
+
 @Data
 public final class ElasticProperty implements BaseProperty {
 
@@ -11,16 +13,26 @@ public final class ElasticProperty implements BaseProperty {
     private String type;
     private String value;
 
-    public Object value(ObjectMapper mapper){
-        if( value == null || value.isEmpty() ) return null;
-        Object translated = (Object)value;
+    @Override
+    public String key(){ return key; }
 
+    @Override
+    public String type(){ return type; }
+
+    @Override
+    public Object value() throws NoSuchElementException {
+        ObjectMapper mapper = new ObjectMapper();
+        if( value == null || value.isEmpty() || mapper == null ){
+            throw new NoSuchElementException("ElasticProperty");
+        }
+
+        Object translated = (Object)value;
         try {
             Class<?> clazz = Class.forName(type);
             translated = mapper.convertValue(value, clazz);
         }
         catch (ClassNotFoundException ex){
-            return translated;
+            return null;
         }
         return translated;
     }

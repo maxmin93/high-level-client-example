@@ -1,5 +1,6 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
+import com.example.aws.elasticsearch.demo.basegraph.model.BaseProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 
@@ -62,6 +63,10 @@ public class ElasticVertexService extends ElasticElementService {
         return super.findById(INDEX, ElasticVertex.class, id);
     }
 
+    public boolean existsId(String id) throws Exception {
+        return super.existsId(INDEX, id);
+    }
+
     ///////////////////////////////////////////////////////////////
 
     public List<ElasticVertex> findByIDs(String[] ids) throws Exception {
@@ -84,6 +89,10 @@ public class ElasticVertexService extends ElasticElementService {
         return super.findByDatasourceAndPropertyKeys(INDEX, ElasticVertex.class, size, datasource, keys);
     }
 
+    public List<ElasticVertex> findByDatasourceAndPropertyKey(int size, String datasource, String key) throws Exception{
+        return super.findByDatasourceAndPropertyKey(INDEX, ElasticVertex.class, size, datasource, key);
+    }
+
     public List<ElasticVertex> findByDatasourceAndPropertyKeyNot(int size, String datasource, String key) throws Exception{
         return super.findByDatasourceAndPropertyKeyNot(INDEX, ElasticVertex.class, size, datasource, key);
     }
@@ -94,7 +103,7 @@ public class ElasticVertexService extends ElasticElementService {
         List<String> fvalues = Arrays.asList(values).stream().map(String::toLowerCase).collect(Collectors.toList());
         List<ElasticVertex> filteredList = new ArrayList<>();
         for( ElasticVertex vertex : list ){
-            List<String> pvalues = vertex.getProperties().stream().map(r->r.getValue().toLowerCase()).collect(Collectors.toList());
+            List<String> pvalues = vertex.getProperties().stream().map(p->((ElasticProperty)p).getValue().toLowerCase()).collect(Collectors.toList());
             if( pvalues.containsAll(fvalues) ) filteredList.add(vertex);
         }
         return filteredList;
@@ -107,9 +116,9 @@ public class ElasticVertexService extends ElasticElementService {
     public List<ElasticVertex> findByDatasourceAndPropertyKeyValue(int size, String datasource, String key, String value) throws Exception{
         List<ElasticVertex> list = super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, key, value);
         return list.stream().filter(r-> {
-                    for(ElasticProperty p : r.getProperties()){
-                        if( p.getKey().equals(key) ){
-                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                    for(BaseProperty p : r.getProperties()){
+                        if( ((ElasticProperty)p).getKey().equals(key) ){
+                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
                         }
                     }
                     return false;
@@ -119,9 +128,9 @@ public class ElasticVertexService extends ElasticElementService {
     public List<ElasticVertex> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
         List<ElasticVertex> list = super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, label, key, value);
         return list.stream().filter(r-> {
-                    for(ElasticProperty p : r.getProperties()){
-                        if( p.getKey().equals(key) ){
-                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                    for(BaseProperty p : r.getProperties()){
+                        if( ((ElasticProperty)p).getKey().equals(key) ){
+                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
                         }
                     }
                     return false;

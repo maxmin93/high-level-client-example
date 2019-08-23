@@ -1,17 +1,24 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
+import com.example.aws.elasticsearch.demo.basegraph.BaseGraphAPI;
+import com.example.aws.elasticsearch.demo.basegraph.model.BaseProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticEdge;
 
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 @Slf4j
 public final class ElasticEdgeService extends ElasticElementService {
@@ -63,6 +70,10 @@ public final class ElasticEdgeService extends ElasticElementService {
         return super.findById(INDEX, ElasticEdge.class, id);
     }
 
+    public boolean existsId(String id) throws Exception {
+        return super.existsId(INDEX, id);
+    }
+
     ///////////////////////////////////////////////////////////////
 
     public List<ElasticEdge> findByIDs(String[] ids) throws Exception {
@@ -85,6 +96,10 @@ public final class ElasticEdgeService extends ElasticElementService {
         return super.findByDatasourceAndPropertyKeys(INDEX, ElasticEdge.class, size, datasource, keys);
     }
 
+    public List<ElasticEdge> findByDatasourceAndPropertyKey(int size, String datasource, String key) throws Exception{
+        return super.findByDatasourceAndPropertyKey(INDEX, ElasticEdge.class, size, datasource, key);
+    }
+
     public List<ElasticEdge> findByDatasourceAndPropertyKeyNot(int size, String datasource, String key) throws Exception{
         return super.findByDatasourceAndPropertyKeyNot(INDEX, ElasticEdge.class, size, datasource, key);
     }
@@ -95,7 +110,7 @@ public final class ElasticEdgeService extends ElasticElementService {
         List<String> fvalues = Arrays.asList(values).stream().map(String::toLowerCase).collect(Collectors.toList());
         List<ElasticEdge> filteredList = new ArrayList<>();
         for( ElasticEdge edge : list ){
-            List<String> pvalues = edge.getProperties().stream().map(r->r.getValue().toLowerCase()).collect(Collectors.toList());
+            List<String> pvalues = edge.getProperties().stream().map(p->((ElasticProperty)p).getValue().toLowerCase()).collect(Collectors.toList());
             if( pvalues.containsAll(fvalues) ) filteredList.add(edge);
         }
         return filteredList;
@@ -108,9 +123,9 @@ public final class ElasticEdgeService extends ElasticElementService {
     public List<ElasticEdge> findByDatasourceAndPropertyKeyValue(int size, String datasource, String key, String value) throws Exception{
         List<ElasticEdge> list = super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, key, value);
         return list.stream().filter(r-> {
-                    for(ElasticProperty p : r.getProperties()){
-                        if( p.getKey().equals(key) ){
-                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                    for(BaseProperty p : r.getProperties()){
+                        if( ((ElasticProperty)p).getKey().equals(key) ){
+                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
                         }
                     }
                     return false;
@@ -120,13 +135,32 @@ public final class ElasticEdgeService extends ElasticElementService {
     public List<ElasticEdge> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
         List<ElasticEdge> list = super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, label, key, value);
         return list.stream().filter(r-> {
-                    for(ElasticProperty p : r.getProperties()){
-                        if( p.getKey().equals(key) ){
-                            if( p.getValue().equalsIgnoreCase(value) ) return true;
+                    for(BaseProperty p : r.getProperties()){
+                        if( ((ElasticProperty)p).getKey().equals(key) ){
+                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
                         }
                     }
                     return false;
                 }).collect(Collectors.toList());
     }
 
+    ///////////////////////////////////////////////////////////////
+
+    public List<ElasticEdge> findByDatasourceAndDirection(
+            int size, String datasource, String vid, BaseGraphAPI.Direction direction) throws Exception{
+        // define : nested query
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .filter(termQuery("datasource", datasource));
+        // with direction
+        if( direction.equals(BaseGraphAPI.Direction.IN))
+            queryBuilder = queryBuilder.must(termQuery("tid", vid));
+        else if( direction.equals(BaseGraphAPI.Direction.OUT))
+            queryBuilder = queryBuilder.must(termQuery("sid", vid));
+        else{
+            queryBuilder = queryBuilder.should(termQuery("tid", vid));
+            queryBuilder = queryBuilder.should(termQuery("sid", vid));
+        }
+        // search
+        return doSearch(INDEX, size, queryBuilder, client, mapper, ElasticEdge.class);
+    }
 }
