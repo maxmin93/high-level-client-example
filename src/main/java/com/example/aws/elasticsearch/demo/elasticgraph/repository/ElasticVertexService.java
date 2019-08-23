@@ -69,8 +69,8 @@ public class ElasticVertexService extends ElasticElementService {
 
     ///////////////////////////////////////////////////////////////
 
-    public List<ElasticVertex> findByIDs(String[] ids) throws Exception {
-        return super.findByIDs(INDEX, ElasticVertex.class, ids);
+    public List<ElasticVertex> findByIds(String[] ids) throws Exception {
+        return super.findByIds(INDEX, ElasticVertex.class, ids);
     }
 
     public List<ElasticVertex> findByLabel(int size, String label) throws Exception {

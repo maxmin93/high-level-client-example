@@ -22,8 +22,8 @@ public final class ElasticProperty implements BaseProperty {
     @Override
     public Object value() throws NoSuchElementException {
         ObjectMapper mapper = new ObjectMapper();
-        if( value == null || value.isEmpty() || mapper == null ){
-            throw new NoSuchElementException("ElasticProperty");
+        if( value == null || value.length() == 0 || value.isEmpty() ){
+            throw new NoSuchElementException("ElasticProperty::value");
         }
 
         Object translated = (Object)value;
@@ -31,9 +31,8 @@ public final class ElasticProperty implements BaseProperty {
             Class<?> clazz = Class.forName(type);
             translated = mapper.convertValue(value, clazz);
         }
-        catch (ClassNotFoundException ex){
-            return null;
-        }
+        catch (Exception e){ return null; }
+
         return translated;
     }
 

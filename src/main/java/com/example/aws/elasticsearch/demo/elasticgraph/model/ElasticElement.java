@@ -16,13 +16,21 @@ public class ElasticElement implements BaseElement {
     protected List<ElasticProperty> properties;
 
     @Override
-    public List<String> getKeys(){
-        return properties.stream().map(r->r.getKey()).collect(Collectors.toList());
+    public List<String> keys(){
+        List<String> keys = new ArrayList<>();
+        for(ElasticProperty p : properties ){
+            if( p.isPresent() ) keys.add(p.getKey());   // pre-check exception
+        }
+        return keys;
     }
 
     @Override
-    public List<Object> getValues(){
-        return properties.stream().map(r->r.value()).collect(Collectors.toList());
+    public List<Object> values(){
+        List<Object> values = new ArrayList<>();
+        for(ElasticProperty p : properties ){
+            if( p.isPresent() ) values.add(p.value());  // pre-check exception
+        }
+        return values;
     }
 
     @Override
@@ -37,7 +45,7 @@ public class ElasticElement implements BaseElement {
 
     @Override
     public boolean exists(String key){
-        return getKeys().contains(key);
+        return keys().contains(key);
     }
 
     @Override

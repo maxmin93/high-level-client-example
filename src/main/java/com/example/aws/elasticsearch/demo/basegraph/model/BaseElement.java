@@ -10,8 +10,8 @@ public interface BaseElement {
     String getLabel();
     String getDatasource();
 
-    List<String> getKeys();
-    List<Object> getValues();
+    List<String> keys();
+    List<Object> values();
 
     boolean exists(String key);
 

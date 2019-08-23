@@ -149,7 +149,7 @@ public class ElasticElementService {
 
     ///////////////////////////////////////////////////////////////
 
-    public <T> List<T> findByIDs(String index, Class<T> tClass, String[] ids) throws Exception {
+    public <T> List<T> findByIds(String index, Class<T> tClass, String[] ids) throws Exception {
         // match to datasource
         QueryBuilder queryBuilder = QueryBuilders.idsQuery().addIds(ids);
         // search

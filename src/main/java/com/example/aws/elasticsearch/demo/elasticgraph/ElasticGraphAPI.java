@@ -194,7 +194,7 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     @Override
     public Collection<BaseVertex> findVertices(final String[] ids){
         try{
-            return vertices.findByIDs(ids)
+            return vertices.findByIds(ids)
                     .stream().map(r->(BaseVertex)r).collect(Collectors.toList());
         }
         catch(Exception e){ return Collections.EMPTY_LIST; }
@@ -271,12 +271,12 @@ public class ElasticGraphAPI implements BaseGraphAPI {
             String[] arrayIds = new String[neighborIds.size()];
             if( labels.length > 0 ){
                 List<String> filterLabels = Arrays.asList(labels);
-                return vertices.findByIDs(neighborIds.toArray(arrayIds)).stream()
+                return vertices.findByIds(neighborIds.toArray(arrayIds)).stream()
                         .filter(r->filterLabels.contains(r.getLabel()))
                         .map(r->(BaseVertex)r).collect(Collectors.toList());
             }
             else
-                return vertices.findByIDs(neighborIds.toArray(arrayIds))
+                return vertices.findByIds(neighborIds.toArray(arrayIds))
                         .stream().map(r->(BaseVertex)r).collect(Collectors.toList());
         }
         catch(Exception e){ return Collections.EMPTY_LIST; }
@@ -286,8 +286,8 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     // find vertices for native
 
     // V.hasId : ids
-    public List<ElasticVertex> findV_IDs(String[] ids) throws Exception {
-        return vertices.findByIDs(ids);
+    public List<ElasticVertex> findV_Ids(String[] ids) throws Exception {
+        return vertices.findByIds(ids);
     }
     // V : datasource
     public List<ElasticVertex> findV_Datasource(int size, String datasource) throws Exception {
@@ -332,7 +332,7 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     @Override
     public Collection<BaseEdge> findEdges(final String[] ids){
         try{
-            return edges.findByIDs(ids)
+            return edges.findByIds(ids)
                     .stream().map(r->(BaseEdge)r).collect(Collectors.toList());
         }
         catch(Exception e){ return Collections.EMPTY_LIST; }
@@ -392,8 +392,8 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     // find edges for native
 
     // E.hasId : ids
-    public List<ElasticEdge> findE_IDs(String[] ids) throws Exception {
-        return edges.findByIDs(ids);
+    public List<ElasticEdge> findE_Ids(String[] ids) throws Exception {
+        return edges.findByIds(ids);
     }
     // E : datasource
     public List<ElasticEdge> findE_Datasource(int size, String datasource) throws Exception {

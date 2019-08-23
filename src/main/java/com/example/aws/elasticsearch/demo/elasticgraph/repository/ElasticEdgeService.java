@@ -76,8 +76,8 @@ public final class ElasticEdgeService extends ElasticElementService {
 
     ///////////////////////////////////////////////////////////////
 
-    public List<ElasticEdge> findByIDs(String[] ids) throws Exception {
-        return super.findByIDs(INDEX, ElasticEdge.class, ids);
+    public List<ElasticEdge> findByIds(String[] ids) throws Exception {
+        return super.findByIds(INDEX, ElasticEdge.class, ids);
     }
 
     public List<ElasticEdge> findByLabel(int size, String label) throws Exception {
