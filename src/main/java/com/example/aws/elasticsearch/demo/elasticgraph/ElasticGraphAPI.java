@@ -310,6 +310,18 @@ public class ElasticGraphAPI implements BaseGraphAPI {
         catch(Exception e){ return Collections.EMPTY_LIST; }
     }
 
+    // V : hasContainers
+    public Collection<BaseVertex> findVertices(String datasource
+            , String label, String[] labels
+            , String key, String keyNot, String[] keys
+            , String[] values, Map<String,String> kvPairs){
+        try{
+            return vertices.findByHasContainers(DEFAULT_SIZE, datasource, label, labels, key, keyNot, keys, values, kvPairs)
+                    .stream().map(r->(BaseVertex)r).collect(Collectors.toList());
+        }
+        catch(Exception e){ return Collections.EMPTY_LIST; }
+    }
+
     @Override
     public BaseVertex findOtherVertexOfEdge(String eid, String vid){
         try{
@@ -443,6 +455,18 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     public Collection<BaseEdge> findEdgesWithValues(String datasource, final String[] values){
         try{
             return edges.findByDatasourceAndPropertyValues(DEFAULT_SIZE, datasource, values)
+                    .stream().map(r->(BaseEdge)r).collect(Collectors.toList());
+        }
+        catch(Exception e){ return Collections.EMPTY_LIST; }
+    }
+
+    // V : hasContainers
+    public Collection<BaseEdge> findEdges(String datasource
+            , String label, String[] labels
+            , String key, String keyNot, String[] keys
+            , String[] values, Map<String,String> kvPairs){
+        try{
+            return edges.findByHasContainers(DEFAULT_SIZE, datasource, label, labels, key, keyNot, keys, values, kvPairs)
                     .stream().map(r->(BaseEdge)r).collect(Collectors.toList());
         }
         catch(Exception e){ return Collections.EMPTY_LIST; }

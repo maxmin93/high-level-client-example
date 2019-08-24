@@ -314,7 +314,7 @@ public class ElasticElementService {
             String index, Class<T> tClass, int size, String datasource
             , String label, String[] labels
             , String key, String keyNot, String[] keys
-            , String[] values, Map<String,String> keyValues) throws Exception {
+            , String[] values, Map<String,String> kvPairs) throws Exception {
 
         // init
         BoolQueryBuilder qb = ElasticHelper.addQueryDs(QueryBuilders.boolQuery(), datasource);
@@ -325,8 +325,8 @@ public class ElasticElementService {
         if( keyNot != null ) qb = ElasticHelper.addQueryKeyNot(qb, keyNot);
         if( keys != null && keys.length > 0 ) qb = ElasticHelper.addQueryKeys(qb, keys);
         if( values != null && values.length > 0 ) qb = ElasticHelper.addQueryValues(qb, values);
-        if( keyValues != null && keyValues.size() > 0 ){
-            for(Map.Entry<String,String> kv : keyValues.entrySet()){
+        if( kvPairs != null && kvPairs.size() > 0 ){
+            for(Map.Entry<String,String> kv : kvPairs.entrySet()){
                 qb = ElasticHelper.addQueryKeyValue(qb, kv.getKey(), kv.getValue());
             }
         }
@@ -345,9 +345,9 @@ public class ElasticElementService {
             }
             list = temp;
         }
-        if( keyValues != null && keyValues.size() > 0 ){
+        if( kvPairs != null && kvPairs.size() > 0 ){
             List<T> temp = list;
-            for(Map.Entry<String,String> kv : keyValues.entrySet()){
+            for(Map.Entry<String,String> kv : kvPairs.entrySet()){
                 temp = temp.stream().filter(r-> {
                     for(ElasticProperty p : ((ElasticElement)r).getProperties()){
                         if( p.getKey().equals(kv.getKey()) ){

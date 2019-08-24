@@ -16,6 +16,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -118,6 +119,14 @@ public final class ElasticEdgeService extends ElasticElementService {
 
     public List<ElasticEdge> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
         return super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, label, key, value);
+    }
+
+    public List<ElasticEdge> findByHasContainers(int size, String datasource
+            , String label, String[] labels
+            , String key, String keyNot, String[] keys
+            , String[] values, Map<String,String> kvPairs) throws Exception {
+        return super.findByHasContainers(INDEX, ElasticEdge.class, size, datasource
+                , label, labels, key, keyNot, keys, values, kvPairs);
     }
 
     ///////////////////////////////////////////////////////////////

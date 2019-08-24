@@ -1,17 +1,13 @@
 package com.example.aws.elasticsearch.demo.elasticgraph.repository;
 
-import com.example.aws.elasticsearch.demo.basegraph.model.BaseProperty;
-import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.RestHighLevelClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Slf4j
 public class ElasticVertexService extends ElasticElementService {
@@ -112,4 +108,13 @@ public class ElasticVertexService extends ElasticElementService {
     public List<ElasticVertex> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
         return super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, label, key, value);
     }
+
+    public List<ElasticVertex> findByHasContainers(int size, String datasource
+            , String label, String[] labels
+            , String key, String keyNot, String[] keys
+            , String[] values, Map<String,String> kvPairs) throws Exception {
+        return super.findByHasContainers(INDEX, ElasticVertex.class, size, datasource
+                , label, labels, key, keyNot, keys, values, kvPairs);
+    }
+
 }
