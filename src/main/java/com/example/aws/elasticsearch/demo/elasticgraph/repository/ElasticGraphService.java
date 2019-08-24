@@ -111,6 +111,7 @@ public class ElasticGraphService {
 
     // REST API : Aggregation
     // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/_metrics_aggregations.html
+    // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/_bucket_aggregations.html
 
     public Map<String, Long> listLabels(String index, String datasource) throws Exception {
         // query : aggregation

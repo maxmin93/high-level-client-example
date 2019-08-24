@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -121,15 +122,17 @@ curl -X GET "localhost:8080/elastic/v/v01"
 curl -X GET "localhost:8080/elastic/e/e01"
     */
     @GetMapping("/v/{id}")
-    public BaseVertex findV(@PathVariable String id) throws Exception {
-        BaseVertex d = base.getVertexById(id);
-        for(BaseProperty p : d.properties()){
-            System.out.println(p.key() +" = "+p.value().toString() );
+    public Optional<BaseVertex> findV(@PathVariable String id) throws Exception {
+        Optional<BaseVertex> d = base.getVertexById(id);
+        if( d.isPresent() ) {
+            for (BaseProperty p : d.get().properties()) {
+                System.out.println(p.key() + " = " + p.value().toString());
+            }
         }
         return d;
     }
     @GetMapping("/e/{id}")
-    public BaseEdge findE(@PathVariable String id) throws Exception {
+    public Optional<BaseEdge> findE(@PathVariable String id) throws Exception {
         return base.getEdgeById(id);
     }
 

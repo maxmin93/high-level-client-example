@@ -192,14 +192,14 @@ public class ElasticGraphAPI implements BaseGraphAPI {
     }
 
     @Override
-    public BaseVertex getVertexById(String id){
-        try{ return vertices.findById(id); }
-        catch(Exception e){ return null; }
+    public Optional<BaseVertex> getVertexById(String id){
+        try{ return Optional.of(vertices.findById(id)); }
+        catch(Exception e){ return Optional.empty(); }
     }
     @Override
-    public BaseEdge getEdgeById(String id){
-        try{ return edges.findById(id); }
-        catch(Exception e){ return null; }
+    public Optional<BaseEdge> getEdgeById(String id){
+        try{ return Optional.of(edges.findById(id)); }
+        catch(Exception e){ return Optional.empty(); }
     }
 
     @Override

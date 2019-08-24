@@ -98,15 +98,7 @@ public class ElasticVertexService extends ElasticElementService {
     }
 
     public List<ElasticVertex> findByDatasourceAndPropertyValues(int size, String datasource, String[] values) throws Exception{
-        List<ElasticVertex> list = super.findByDatasourceAndPropertyValues(INDEX, ElasticVertex.class, size, datasource, values);
-        // compare two values by full match with lowercase
-        List<String> fvalues = Arrays.asList(values).stream().map(String::toLowerCase).collect(Collectors.toList());
-        List<ElasticVertex> filteredList = new ArrayList<>();
-        for( ElasticVertex vertex : list ){
-            List<String> pvalues = vertex.getProperties().stream().map(p->((ElasticProperty)p).getValue().toLowerCase()).collect(Collectors.toList());
-            if( pvalues.containsAll(fvalues) ) filteredList.add(vertex);
-        }
-        return filteredList;
+        return super.findByDatasourceAndPropertyValues(INDEX, ElasticVertex.class, size, datasource, values);
     }
 
     public List<ElasticVertex> findByDatasourceAndPropertyValuePartial(int size, String datasource, String value) throws Exception{
@@ -114,26 +106,10 @@ public class ElasticVertexService extends ElasticElementService {
     }
 
     public List<ElasticVertex> findByDatasourceAndPropertyKeyValue(int size, String datasource, String key, String value) throws Exception{
-        List<ElasticVertex> list = super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, key, value);
-        return list.stream().filter(r-> {
-                    for(BaseProperty p : r.getProperties()){
-                        if( ((ElasticProperty)p).getKey().equals(key) ){
-                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
-                        }
-                    }
-                    return false;
-                }).collect(Collectors.toList());
+        return super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, key, value);
     }
 
     public List<ElasticVertex> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
-        List<ElasticVertex> list = super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, label, key, value);
-        return list.stream().filter(r-> {
-                    for(BaseProperty p : r.getProperties()){
-                        if( ((ElasticProperty)p).getKey().equals(key) ){
-                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
-                        }
-                    }
-                    return false;
-                }).collect(Collectors.toList());
+        return super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticVertex.class, size, datasource, label, key, value);
     }
 }

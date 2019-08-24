@@ -25,8 +25,8 @@ public interface BaseGraphAPI {
     boolean existsVertex(String id);
     boolean existsEdge(String id);
 
-    BaseVertex getVertexById(String id);
-    BaseEdge getEdgeById(String id);
+    Optional<BaseVertex> getVertexById(String id);
+    Optional<BaseEdge> getEdgeById(String id);
 
     boolean saveVertex(BaseVertex vertex);
     boolean saveEdge(BaseEdge edge);

@@ -105,15 +105,7 @@ public final class ElasticEdgeService extends ElasticElementService {
     }
 
     public List<ElasticEdge> findByDatasourceAndPropertyValues(int size, String datasource, String[] values) throws Exception{
-        List<ElasticEdge> list = super.findByDatasourceAndPropertyValues(INDEX, ElasticEdge.class, size, datasource, values);
-        // compare two values by full match with lowercase
-        List<String> fvalues = Arrays.asList(values).stream().map(String::toLowerCase).collect(Collectors.toList());
-        List<ElasticEdge> filteredList = new ArrayList<>();
-        for( ElasticEdge edge : list ){
-            List<String> pvalues = edge.getProperties().stream().map(p->((ElasticProperty)p).getValue().toLowerCase()).collect(Collectors.toList());
-            if( pvalues.containsAll(fvalues) ) filteredList.add(edge);
-        }
-        return filteredList;
+        return super.findByDatasourceAndPropertyValues(INDEX, ElasticEdge.class, size, datasource, values);
     }
 
     public List<ElasticEdge> findByDatasourceAndPropertyValuePartial(int size, String datasource, String value) throws Exception{
@@ -121,27 +113,11 @@ public final class ElasticEdgeService extends ElasticElementService {
     }
 
     public List<ElasticEdge> findByDatasourceAndPropertyKeyValue(int size, String datasource, String key, String value) throws Exception{
-        List<ElasticEdge> list = super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, key, value);
-        return list.stream().filter(r-> {
-                    for(BaseProperty p : r.getProperties()){
-                        if( ((ElasticProperty)p).getKey().equals(key) ){
-                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
-                        }
-                    }
-                    return false;
-                }).collect(Collectors.toList());
+        return super.findByDatasourceAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, key, value);
     }
 
     public List<ElasticEdge> findByDatasourceAndLabelAndPropertyKeyValue(int size, String datasource, String label, String key, String value) throws Exception{
-        List<ElasticEdge> list = super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, label, key, value);
-        return list.stream().filter(r-> {
-                    for(BaseProperty p : r.getProperties()){
-                        if( ((ElasticProperty)p).getKey().equals(key) ){
-                            if( ((ElasticProperty)p).getValue().equalsIgnoreCase(value) ) return true;
-                        }
-                    }
-                    return false;
-                }).collect(Collectors.toList());
+        return super.findByDatasourceAndLabelAndPropertyKeyValue(INDEX, ElasticEdge.class, size, datasource, label, key, value);
     }
 
     ///////////////////////////////////////////////////////////////
