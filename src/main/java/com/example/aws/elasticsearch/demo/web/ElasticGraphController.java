@@ -9,15 +9,14 @@ import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticProperty;
 import com.example.aws.elasticsearch.demo.elasticgraph.model.ElasticVertex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.analysis.CharArrayMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -280,6 +279,83 @@ curl -X GET "localhost:8080/elastic/sample/e/label?q=person"
             @RequestParam(value = "value") String value
     ) throws Exception {
         return base.findEdges(datasource, label, key, value);
+    }
+
+
+    @GetMapping(value = "/{datasource}/v/hasContainers")
+    public Collection<BaseVertex> findV_hasContainers(
+            @PathVariable String datasource,
+            @RequestParam(value = "label", required = false) String label,
+            @RequestParam(value = "labels", required = false) List<String> labelParams,
+            @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "keyNot", required = false) String keyNot,
+            @RequestParam(value = "keys", required = false) List<String> keyParams,
+            @RequestParam(value = "values", required = false) List<String> valueParams,
+            @RequestParam(value = "kvPairs", required = false) List<String> kvParams
+    ) throws Exception {
+        // Parameters
+        String[] labels = labelParams==null ? null : labelParams.stream().toArray(String[]::new);
+        String[] keys = keyParams==null ? null : keyParams.stream().toArray(String[]::new);
+        String[] values = valueParams==null ? null : valueParams.stream().toArray(String[]::new);
+
+        Map<String,String> kvPairs = null;
+        if( kvParams != null && kvParams.size() > 0 ){
+            final String delimter = "@";
+            kvPairs = kvParams.stream()
+                    .map(r->r.split(delimter,2)).filter(r->r.length==2)
+                    .collect(Collectors.toMap(r->r[0],r->r[1]));
+        }
+
+        // for DEBUG
+        System.out.println("V.hasContainers :: datasource => "+datasource);
+        System.out.println("  , label => "+label);
+        System.out.println("  , labels => "+(labels==null ? "null" : String.join(",", labels)));
+        System.out.println("  , key => "+key);
+        System.out.println("  , keyNot => "+keyNot);
+        System.out.println("  , keys => "+(keys==null ? "null" : String.join(",", keys)));
+        System.out.println("  , values => "+(values==null ? "null" : String.join(",", values)));
+        System.out.println("  , kvPairs => "+(kvPairs==null ? "null" : kvPairs.entrySet().stream().map(r->r.getKey()+"="+r.getValue()).collect(Collectors.joining(","))));
+
+        return ((ElasticGraphAPI)base).findVertices(datasource
+                    , label, labels, key, keyNot, keys, values, kvPairs);
+    }
+
+    @GetMapping(value = "/{datasource}/e/hasContainers")
+    public Collection<BaseEdge> findE_hasContainers(
+            @PathVariable String datasource,
+            @RequestParam(value = "label", required = false) String label,
+            @RequestParam(value = "labels", required = false) List<String> labelParams,
+            @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "keyNot", required = false) String keyNot,
+            @RequestParam(value = "keys", required = false) List<String> keyParams,
+            @RequestParam(value = "values", required = false) List<String> valueParams,
+            @RequestParam(value = "kvPairs", required = false) List<String> kvParams
+    ) throws Exception {
+        // Parameters
+        String[] labels = labelParams==null ? null : labelParams.stream().toArray(String[]::new);
+        String[] keys = keyParams==null ? null : keyParams.stream().toArray(String[]::new);
+        String[] values = valueParams==null ? null : valueParams.stream().toArray(String[]::new);
+
+        Map<String,String> kvPairs = null;
+        if( kvParams != null && kvParams.size() > 0 ){
+            final String delimter = "@";
+            kvPairs = kvParams.stream()
+                    .map(r->r.split(delimter)).filter(r->r.length==2)
+                    .collect(Collectors.toMap(r->r[0],r->r[1]));
+        }
+
+        // for DEBUG
+        System.out.println("E.hasContainers :: datasource => "+datasource);
+        System.out.println("  , label => "+label);
+        System.out.println("  , labels => "+(labels==null ? "null" : String.join(",", labels)));
+        System.out.println("  , key => "+key);
+        System.out.println("  , keyNot => "+keyNot);
+        System.out.println("  , keys => "+(keys==null ? "null" : String.join(",", keys)));
+        System.out.println("  , values => "+(values==null ? "null" : String.join(",", values)));
+        System.out.println("  , kvPairs => "+(kvPairs==null ? "null" : kvPairs.entrySet().stream().map(r->r.getKey()+"="+r.getValue()).collect(Collectors.joining(","))));
+
+        return ((ElasticGraphAPI)base).findEdges(datasource
+                , label, labels, key, keyNot, keys, values, kvPairs);
     }
 
 }
